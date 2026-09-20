@@ -1,4 +1,4 @@
-import { generateEmbedding } from "./embedding.service";
+import { generateEmbedding } from "../services/embedding.service";
 
 const test = async () => {
   const text =
