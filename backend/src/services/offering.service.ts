@@ -1,4 +1,6 @@
 import pool from "../db";
+import { generateEmbedding } from "./embedding.service";
+import { buildOfferingText } from "./matching-text.service";
 
 export interface CreateOfferingInput {
   supplierId: string;
@@ -31,6 +33,16 @@ export const supplierExists = async (supplierId: string) => {
 };
 
 export const createOffering = async (data: CreateOfferingInput) => {
+  const embeddingText = buildOfferingText({
+    productOffered: data.productOffered,
+    category: data.category,
+    specifications: data.specifications,
+    qualityGrade: data.qualityGrade,
+    pricingNotes: data.pricingNotes,
+    additionalNotes: data.additionalNotes,
+  });
+
+  const embedding = await generateEmbedding(embeddingText);
   const query = `
     INSERT INTO offerings (
       supplier_id,
@@ -47,12 +59,13 @@ export const createOffering = async (data: CreateOfferingInput) => {
       fulfillment_location,
       minimum_delivery_days,
       maximum_delivery_days,
-      additional_notes
+      additional_notes,
+      embedding
     )
     VALUES (
       $1, $2, $3, $4, $5,
       $6, $7, $8, $9, $10,
-      $11, $12, $13, $14, $15
+      $11, $12, $13, $14, $15, $16::vector
     )
     RETURNING *;
   `;
@@ -73,6 +86,7 @@ export const createOffering = async (data: CreateOfferingInput) => {
     data.minimumDeliveryDays,
     data.maximumDeliveryDays,
     data.additionalNotes ?? null,
+    JSON.stringify(embedding),
   ];
 
   const result = await pool.query(query, values);
