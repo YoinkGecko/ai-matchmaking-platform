@@ -1,0 +1,65 @@
+import pool from "../db";
+
+export interface CreateRequirementInput {
+  clientId: string;
+  productRequirement: string;
+  category: string;
+  quantityRequired: number;
+  unit: string;
+  specifications?: string;
+  qualityGrade?: string;
+  additionalNotes?: string;
+  budget: number;
+  currency: string;
+  budgetType: "TOTAL" | "PER_UNIT";
+  deliveryLocation: string;
+  requiredByDate: string;
+}
+
+export const createRequirement = async (
+  data: CreateRequirementInput
+) => {
+  const query = `
+    INSERT INTO requirements (
+      client_id,
+      product_requirement,
+      category,
+      quantity_required,
+      unit,
+      specifications,
+      quality_grade,
+      additional_notes,
+      budget,
+      currency,
+      budget_type,
+      delivery_location,
+      required_by_date
+    )
+    VALUES (
+      $1, $2, $3, $4, $5,
+      $6, $7, $8, $9, $10,
+      $11, $12, $13
+    )
+    RETURNING *;
+  `;
+
+  const values = [
+    data.clientId,
+    data.productRequirement,
+    data.category,
+    data.quantityRequired,
+    data.unit,
+    data.specifications ?? null,
+    data.qualityGrade ?? null,
+    data.additionalNotes ?? null,
+    data.budget,
+    data.currency,
+    data.budgetType,
+    data.deliveryLocation,
+    data.requiredByDate,
+  ];
+
+  const result = await pool.query(query, values);
+
+  return result.rows[0];
+};
