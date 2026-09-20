@@ -73,3 +73,33 @@ export const clientExists = async (clientId: string) => {
 
   return result.rowCount !== null && result.rowCount > 0;
 };
+
+export const getRequirementsByClientId = async (clientId: string) => {
+  const query = `
+    SELECT
+      id,
+      client_id,
+      product_requirement,
+      category,
+      quantity_required,
+      unit,
+      specifications,
+      quality_grade,
+      additional_notes,
+      budget,
+      currency,
+      budget_type,
+      delivery_location,
+      required_by_date,
+      status,
+      created_at,
+      updated_at
+    FROM requirements
+    WHERE client_id = $1
+    ORDER BY created_at DESC;
+  `;
+
+  const result = await pool.query(query, [clientId]);
+
+  return result.rows;
+};
