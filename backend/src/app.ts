@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import clientRoutes from "./routes/client.routes";
 
 const app = express();
 
@@ -9,8 +10,9 @@ app.use(express.json());
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
-    message:'Server Running',
   });
 });
+
+app.use("/api/clients", clientRoutes);
 
 export default app;
