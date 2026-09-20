@@ -1,6 +1,9 @@
 import { Router } from "express";
 
-import { createRequirementController } from "../controllers/requirement.controller";
+import {
+  createRequirementController,
+  getClientRequirementsController,
+} from "../controllers/requirement.controller";
 
 import { validate } from "../middleware/validate";
 import { validateCreateRequirement } from "../middleware/requirement.validation";
@@ -13,6 +16,12 @@ router.post(
   validate(validateClientId),
   validate(validateCreateRequirement),
   createRequirementController,
+);
+
+router.get(
+  "/clients/:clientId/requirements",
+  validate(validateClientId),
+  getClientRequirementsController,
 );
 
 export default router;
