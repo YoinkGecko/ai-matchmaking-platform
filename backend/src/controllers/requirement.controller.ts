@@ -1,12 +1,25 @@
 import { Request, Response } from "express";
-import { createRequirement } from "../services/requirement.service";
+import {
+  clientExists,
+  createRequirement,
+} from "../services/requirement.service";
 
 export const createRequirementController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
-    const clientId  = req.params.clientId as string;
+    const clientId = req.params.clientId as string;
+
+    const exists = await clientExists(clientId);
+
+    if (!exists) {
+      res.status(404).json({
+        success: false,
+        message: "Client not found",
+      });
+      return;
+    }
 
     const {
       productRequirement,

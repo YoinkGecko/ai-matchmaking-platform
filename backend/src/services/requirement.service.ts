@@ -16,9 +16,7 @@ export interface CreateRequirementInput {
   requiredByDate: string;
 }
 
-export const createRequirement = async (
-  data: CreateRequirementInput
-) => {
+export const createRequirement = async (data: CreateRequirementInput) => {
   const query = `
     INSERT INTO requirements (
       client_id,
@@ -62,4 +60,16 @@ export const createRequirement = async (
   const result = await pool.query(query, values);
 
   return result.rows[0];
+};
+
+export const clientExists = async (clientId: string) => {
+  const query = `
+    SELECT id
+    FROM clients
+    WHERE id = $1;
+  `;
+
+  const result = await pool.query(query, [clientId]);
+
+  return result.rowCount !== null && result.rowCount > 0;
 };
