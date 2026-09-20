@@ -59,3 +59,7 @@ CREATE TABLE offerings (
             AND maximum_delivery_days >= minimum_delivery_days
         )
 );
+
+
+ALTER TABLE offerings
+ADD COLUMN embedding vector(768);

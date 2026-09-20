@@ -60,3 +60,6 @@ CREATE TABLE requirements (
     CONSTRAINT requirements_budget_check
         CHECK (budget >= 0)
 );
+
+ALTER TABLE requirements
+ADD COLUMN embedding vector(768);
