@@ -1,4 +1,6 @@
 import pool from "../db";
+import { generateEmbedding } from "./embedding.service";
+import { buildRequirementText } from "./matching-text.service";
 
 export interface CreateRequirementInput {
   clientId: string;
@@ -17,28 +19,39 @@ export interface CreateRequirementInput {
 }
 
 export const createRequirement = async (data: CreateRequirementInput) => {
+  const embeddingText = buildRequirementText({
+    productRequirement: data.productRequirement,
+    category: data.category,
+    specifications: data.specifications,
+    qualityGrade: data.qualityGrade,
+    additionalNotes: data.additionalNotes,
+  });
+
+  const embedding = await generateEmbedding(embeddingText);
+
   const query = `
-    INSERT INTO requirements (
-      client_id,
-      product_requirement,
-      category,
-      quantity_required,
-      unit,
-      specifications,
-      quality_grade,
-      additional_notes,
-      budget,
-      currency,
-      budget_type,
-      delivery_location,
-      required_by_date
-    )
-    VALUES (
-      $1, $2, $3, $4, $5,
-      $6, $7, $8, $9, $10,
-      $11, $12, $13
-    )
-    RETURNING *;
+  INSERT INTO requirements (
+    client_id,
+    product_requirement,
+    category,
+    quantity_required,
+    unit,
+    specifications,
+    quality_grade,
+    additional_notes,
+    budget,
+    currency,
+    budget_type,
+    delivery_location,
+    required_by_date,
+    embedding
+  )
+  VALUES (
+    $1, $2, $3, $4, $5,
+    $6, $7, $8, $9, $10,
+    $11, $12, $13, $14
+  )
+  RETURNING *;
   `;
 
   const values = [
@@ -55,6 +68,7 @@ export const createRequirement = async (data: CreateRequirementInput) => {
     data.budgetType,
     data.deliveryLocation,
     data.requiredByDate,
+    JSON.stringify(embedding),
   ];
 
   const result = await pool.query(query, values);
