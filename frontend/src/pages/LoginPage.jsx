@@ -20,7 +20,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
-  const { login } = useAuth();
+  const { login, saveProfileId } = useAuth();
   const navigate = useNavigate();
 
   const requestOtp = async (e) => {
@@ -46,6 +46,23 @@ export default function LoginPage() {
     try {
       const result = await api.verifyOtp(email, otp, role);
       login(result.token, result.user);
+      if (role === "CLIENT") {
+        try {
+          const profile = await api.getMyClientProfile();
+          const id = profile.data?.id;
+          if (id) saveProfileId(id);
+        } catch {
+          /* profile banner can link manually */
+        }
+      } else if (role === "SUPPLIER") {
+        try {
+          const profile = await api.getMySupplierProfile();
+          const id = profile.data?.id;
+          if (id) saveProfileId(id);
+        } catch {
+          /* profile banner can link manually */
+        }
+      }
       navigate(dashboardPathForRole(role), { replace: true });
     } catch (err) {
       setError(err.message);
