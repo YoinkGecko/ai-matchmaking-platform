@@ -59,6 +59,10 @@ export const saveMatch = async (match: MatchRecord) => {
       product_reason = EXCLUDED.product_reason,
       budget_explanation = EXCLUDED.budget_explanation,
       delivery_explanation = EXCLUDED.delivery_explanation,
+      status = CASE
+        WHEN EXCLUDED.match_percentage = 0 THEN 'REJECTED'
+        ELSE matches.status
+      END,
       updated_at = NOW()
 
     RETURNING *;

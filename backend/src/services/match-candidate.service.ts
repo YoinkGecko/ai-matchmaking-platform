@@ -4,6 +4,7 @@ import { calculateQuantityCoverage } from "./quantity-matching.service";
 import { evaluateProduct } from "./product-compatibility.service";
 
 import { calculateMatchScore } from "./match-score.service";
+import { computeProductSignal } from "./product-signal.service";
 
 export interface MatchRequirement {
   productRequirement: string;
@@ -85,9 +86,20 @@ export const evaluateMatchCandidate = async (
   );
 
   // 4. Product compatibility
+  const productSignal = computeProductSignal(
+    {
+      category: requirement.category,
+      productRequirement: requirement.productRequirement,
+    },
+    {
+      category: offering.category,
+      productOffered: offering.productOffered,
+    },
+  );
+
   const productResult = await evaluateProduct({
     semanticScore: offering.semanticScore,
-    productSignal: 0,
+    productSignal,
 
     requirement: {
       productRequirement: requirement.productRequirement,
@@ -100,10 +112,15 @@ export const evaluateMatchCandidate = async (
     },
   });
 
+  const decisionForScore =
+    productResult.decision === "CLEAR_MATCH"
+      ? "EXACT_MATCH"
+      : productResult.decision;
+
   const matchScore = calculateMatchScore({
     semanticScore: offering.semanticScore,
 
-    productDecision: productResult.decision as
+    productDecision: decisionForScore as
       | "EXACT_MATCH"
       | "CLOSE_MATCH"
       | "RELATED_BUT_DIFFERENT"
