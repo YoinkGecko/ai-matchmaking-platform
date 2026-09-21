@@ -6,46 +6,39 @@ const normalizeText = (text: string): string => {
     .trim();
 };
 
+const tokenize = (text: string): string[] => {
+  return normalizeText(text).split(" ").filter(Boolean);
+};
+
 export const calculateProductSignal = (
   requiredProduct: string,
   requiredCategory: string,
   offeredProduct: string,
   offeredCategory: string,
 ): number => {
-  const required = normalizeText(requiredProduct);
-  const requiredCategoryText = normalizeText(requiredCategory);
+  const requiredProductNormalized = normalizeText(requiredProduct);
 
-  const offered = normalizeText(`${offeredProduct} ${offeredCategory}`);
+  const offeredProductNormalized = normalizeText(offeredProduct);
 
-  // Direct product phrase match
-  if (offered.includes(required)) {
+  const offeredCategoryNormalized = normalizeText(offeredCategory);
+
+  // Exact product phrase.
+  if (offeredProductNormalized === requiredProductNormalized) {
     return 1;
   }
 
-  // Individual meaningful words from the requested product
-  const productWords = required.split(" ").filter((word) => word.length >= 3);
-
-  if (productWords.length === 0) {
-    return 0;
+  // Requested product appears as a complete phrase
+  // in the supplier's product description.
+  if (offeredProductNormalized.includes(requiredProductNormalized)) {
+    return 0.9;
   }
 
-  const matchedWords = productWords.filter((word) => offered.includes(word));
+  // Requested product appears in the supplier category.
+  if (offeredCategoryNormalized.includes(requiredProductNormalized)) {
+    return 0.85;
+  }
 
-  const productWordScore = matchedWords.length / productWords.length;
-
-  // Category relationship
-  const categoryWords = requiredCategoryText
-    .split(" ")
-    .filter((word) => word.length >= 3);
-
-  const matchedCategoryWords = categoryWords.filter((word) =>
-    offered.includes(word),
-  );
-
-  const categoryScore =
-    categoryWords.length === 0
-      ? 0
-      : matchedCategoryWords.length / categoryWords.length;
-
-  return Math.max(productWordScore, categoryScore * 0.5);
+  // Otherwise, do not claim product compatibility
+  // merely because the category is related.
+  return 0;
 };
