@@ -92,15 +92,11 @@ export const evaluateMatchCandidate = async (
     requirement: {
       productRequirement: requirement.productRequirement,
       category: requirement.category,
-      specifications: requirement.specifications,
-      qualityGrade: requirement.qualityGrade,
     },
 
     offering: {
       productOffered: offering.productOffered,
       category: offering.category,
-      specifications: offering.specifications,
-      qualityGrade: offering.qualityGrade,
     },
   });
 
