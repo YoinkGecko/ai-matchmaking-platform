@@ -9,6 +9,8 @@ import matchRoutes from "./routes/match.routes";
 
 import authRoutes from "./routes/auth.routes";
 
+import { authenticate } from "./middleware/auth.middleware";
+
 const app = express();
 
 app.use(cors());
@@ -20,6 +22,11 @@ app.get("/health", (_req, res) => {
   });
 });
 
+app.get("/api/auth/me", authenticate, (req, res) => {
+  res.json({
+    user: res.locals.user,
+  });
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api", requirementRoutes);
