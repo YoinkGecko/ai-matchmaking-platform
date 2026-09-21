@@ -63,3 +63,6 @@ CREATE TABLE requirements (
 
 ALTER TABLE requirements
 ADD COLUMN embedding vector(768);
+
+ALTER TABLE requirements
+ADD COLUMN allow_multiple_suppliers BOOLEAN NOT NULL DEFAULT FALSE;
