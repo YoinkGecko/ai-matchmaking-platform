@@ -12,6 +12,9 @@ CREATE TABLE suppliers (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE suppliers
+ADD COLUMN user_id UUID UNIQUE REFERENCES users(id);
+
 
 CREATE TABLE offerings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

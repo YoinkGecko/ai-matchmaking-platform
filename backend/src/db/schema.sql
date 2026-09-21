@@ -12,6 +12,8 @@ CREATE TABLE clients (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE clients
+ADD COLUMN user_id UUID UNIQUE REFERENCES users(id);
 
 CREATE TABLE requirements (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
