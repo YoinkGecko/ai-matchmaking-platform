@@ -135,5 +135,23 @@ Return ONLY valid JSON:
 
   const result = JSON.parse(data.response);
 
+  const allowedMatchTypes: ProductMatchType[] = [
+    "EXACT_MATCH",
+    "CLOSE_MATCH",
+    "RELATED_BUT_DIFFERENT",
+    "INCOMPATIBLE",
+  ];
+
+  const matchType = result.matchType?.trim().toUpperCase().replace(/\s+/g, "_");
+
+  if (!allowedMatchTypes.includes(matchType)) {
+    throw new Error(`Invalid match type returned by AI: ${result.matchType}`);
+  }
+
+  return {
+    matchType,
+    reason: String(result.reason ?? ""),
+  };
+
   return result;
 };
