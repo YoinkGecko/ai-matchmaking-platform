@@ -7,8 +7,11 @@ export interface AllocationRequirement {
 export interface AllocationOffering {
   supplierId: string;
   offeringId: string;
+
   availableQuantity: number;
   unit: string;
+
+  semanticScore: number;
 }
 
 export interface AllocationItem {
@@ -19,7 +22,7 @@ export interface AllocationItem {
 
 export const allocateSuppliers = (
   requirement: AllocationRequirement,
-  offerings: AllocationOffering[]
+  offerings: AllocationOffering[],
 ): {
   allocations: AllocationItem[];
   fulfilledQuantity: number;
@@ -28,15 +31,13 @@ export const allocateSuppliers = (
   // Only compatible units
   const compatibleOfferings = offerings.filter(
     (offering) =>
-      offering.unit.toLowerCase() ===
-      requirement.unit.toLowerCase()
+      offering.unit.toLowerCase() === requirement.unit.toLowerCase(),
   );
 
   // Single-supplier mode
   if (!requirement.allowMultipleSuppliers) {
     const offering = compatibleOfferings.find(
-      (offering) =>
-        offering.availableQuantity >= requirement.requiredQuantity
+      (offering) => offering.availableQuantity >= requirement.requiredQuantity,
     );
 
     if (!offering) {
@@ -65,14 +66,18 @@ export const allocateSuppliers = (
 
   const allocations: AllocationItem[] = [];
 
-  for (const offering of compatibleOfferings) {
+  const sortedOfferings = [...compatibleOfferings].sort(
+    (a, b) => b.semanticScore - a.semanticScore,
+  );
+
+  for (const offering of sortedOfferings) {
     if (remainingQuantity <= 0) {
       break;
     }
 
     const allocatedQuantity = Math.min(
       offering.availableQuantity,
-      remainingQuantity
+      remainingQuantity,
     );
 
     allocations.push({
@@ -84,13 +89,11 @@ export const allocateSuppliers = (
     remainingQuantity -= allocatedQuantity;
   }
 
-  const fulfilledQuantity =
-    requirement.requiredQuantity - remainingQuantity;
+  const fulfilledQuantity = requirement.requiredQuantity - remainingQuantity;
 
   return {
     allocations,
     fulfilledQuantity,
-    fullyFulfilled:
-      fulfilledQuantity >= requirement.requiredQuantity,
+    fullyFulfilled: fulfilledQuantity >= requirement.requiredQuantity,
   };
 };
