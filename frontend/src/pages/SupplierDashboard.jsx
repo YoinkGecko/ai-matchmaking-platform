@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import FadeIn from "../components/FadeIn";
 import ProfileLinkBanner from "../components/ProfileLinkBanner";
 import SupplierMatchCard from "../components/SupplierMatchCard";
+import SupplierOrderCard from "../components/SupplierOrderCard";
 import { useAuth } from "../context/AuthContext";
 import { formatMoney, pick } from "../utils/format";
 
@@ -27,6 +28,7 @@ export default function SupplierDashboard() {
   const [supplier, setSupplier] = useState(null);
   const [offerings, setOfferings] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -41,14 +43,16 @@ export default function SupplierDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [supplierRes, offeringsRes, matchesRes] = await Promise.all([
+      const [supplierRes, offeringsRes, matchesRes, ordersRes] = await Promise.all([
         api.getSupplier(profileId),
         api.getOfferings(profileId),
         api.getSupplierMatches(profileId),
+        api.getMySupplierOrders().catch(() => ({ data: [] })),
       ]);
       setSupplier(supplierRes.data);
       setOfferings(offeringsRes.data || []);
       setMatches(matchesRes.matches || []);
+      setOrders(ordersRes.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -139,6 +143,12 @@ export default function SupplierDashboard() {
             <div className="stat-card">
               <div className="stat-card__value">{matches.length}</div>
               <div className="stat-card__label">Client matches</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__value">
+                {orders.filter((o) => pick(o, "status", "status") === "PENDING").length}
+              </div>
+              <div className="stat-card__label">Pending orders</div>
             </div>
           </div>
         </aside>
@@ -286,6 +296,28 @@ export default function SupplierDashboard() {
               </button>
             </form>
           )}
+
+          <div>
+            <p className="section-title">Order requests</p>
+            {!loading && profileId && orders.length === 0 ? (
+              <div className="card empty">
+                <h3>No order requests yet</h3>
+                <p>When a client places an order from a match, it appears here and you get email.</p>
+              </div>
+            ) : (
+              <div className="match-grid">
+                {orders.map((order, index) => (
+                  <div
+                    key={pick(order, "id", "id")}
+                    className="fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <SupplierOrderCard order={order} onUpdated={loadData} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div>
             <p className="section-title">Client matches</p>

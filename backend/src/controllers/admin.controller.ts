@@ -3,6 +3,7 @@ import {
   getOverview,
   listClients,
   listMatches,
+  listOrders,
   listOfferings,
   listRequirements,
   listSuppliers,
@@ -82,5 +83,15 @@ export const adminMatchesController = async (_req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Failed to load matches" });
+  }
+};
+
+export const adminOrdersController = async (_req: Request, res: Response) => {
+  try {
+    const data = await listOrders();
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Failed to load orders" });
   }
 };

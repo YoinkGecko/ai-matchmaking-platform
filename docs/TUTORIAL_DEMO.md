@@ -57,6 +57,8 @@ redis-cli GET "otp:demo.client@wisdommatch.demo"
    - **SUGGESTED** — **QUOTE_REQUIRED** + partial qty + uncertain delivery.
    - **REJECTED** — **CLEAR_REJECT** / **0%** (steel vs rice).
 3. Click each card — **Match detail drawer**: semantic score, product/budget/delivery blocks, supplier contact, explanations.
+4. On a strong match (not 0%), use **Place order with supplier** — both parties get email; requirement moves to **CONFIRMED**.
+5. Log in as the supplier — **Order requests** section shows pending orders; **Accept** or **Decline** (emails both sides again).
 
 ### C. Client — live AI pipeline (optional)
 

@@ -115,6 +115,22 @@ export const api = {
   getSupplierMatches: (supplierId) =>
     request(`/api/suppliers/${supplierId}/matches`),
 
+  placeOrder: (requirementId, matchId, data) =>
+    request(`/api/requirements/${requirementId}/matches/${matchId}/orders`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getMyClientOrders: () => request("/api/clients/me/orders"),
+
+  getMySupplierOrders: () => request("/api/suppliers/me/orders"),
+
+  respondToSupplierOrder: (orderId, data) =>
+    request(`/api/suppliers/me/orders/${orderId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
   adminOverview: () => request("/api/admin/overview"),
   adminUsers: () => request("/api/admin/users"),
   adminClients: () => request("/api/admin/clients"),
@@ -122,4 +138,5 @@ export const api = {
   adminRequirements: () => request("/api/admin/requirements"),
   adminOfferings: () => request("/api/admin/offerings"),
   adminMatches: () => request("/api/admin/matches"),
+  adminOrders: () => request("/api/admin/orders"),
 };

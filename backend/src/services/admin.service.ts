@@ -8,7 +8,8 @@ export const getOverview = async () => {
       (SELECT COUNT(*)::int FROM suppliers) AS suppliers,
       (SELECT COUNT(*)::int FROM requirements) AS requirements,
       (SELECT COUNT(*)::int FROM offerings) AS offerings,
-      (SELECT COUNT(*)::int FROM matches) AS matches
+      (SELECT COUNT(*)::int FROM matches) AS matches,
+      (SELECT COUNT(*)::int FROM orders) AS orders
   `);
 
   return result.rows[0];
@@ -86,6 +87,29 @@ export const listMatches = async () => {
     JOIN suppliers s ON s.id = m.supplier_id
     JOIN offerings o ON o.id = m.offering_id
     ORDER BY m.match_score DESC, m.created_at DESC
+  `);
+  return result.rows;
+};
+
+export const listOrders = async () => {
+  const result = await pool.query(`
+    SELECT
+      o.*,
+      m.match_percentage,
+      r.product_requirement,
+      r.delivery_location,
+      off.product_offered,
+      c.company_name,
+      c.email AS client_email,
+      s.supplier_name,
+      s.email AS supplier_email
+    FROM orders o
+    JOIN matches m ON m.id = o.match_id
+    JOIN requirements r ON r.id = o.requirement_id
+    JOIN offerings off ON off.id = o.offering_id
+    JOIN clients c ON c.id = o.client_id
+    JOIN suppliers s ON s.id = o.supplier_id
+    ORDER BY o.created_at DESC
   `);
   return result.rows;
 };

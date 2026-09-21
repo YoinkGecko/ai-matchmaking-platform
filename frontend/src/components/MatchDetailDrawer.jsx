@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import MatchStatusBadge from "./MatchStatusBadge";
+import OrderStatusBadge from "./OrderStatusBadge";
 import ScoreRing from "./ScoreRing";
 import { formatDate, formatMoney, titleCase } from "../utils/format";
 import {
@@ -37,12 +38,22 @@ export default function MatchDetailDrawer({
   match: initialMatch,
   requirementId,
   onClose,
+  onOrderPlaced,
 }) {
   const [match, setMatch] = useState(initialMatch);
   const [loading, setLoading] = useState(false);
+  const [quantity, setQuantity] = useState("");
+  const [clientNotes, setClientNotes] = useState("");
+  const [placing, setPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState("");
+  const [placeSuccess, setPlaceSuccess] = useState("");
 
   useEffect(() => {
     setMatch(initialMatch);
+    setPlaceError("");
+    setPlaceSuccess("");
+    const reqQty = getMatchField(initialMatch, "quantityRequired", "quantity_required");
+    setQuantity(reqQty != null ? String(reqQty) : "");
   }, [initialMatch]);
 
   useEffect(() => {
@@ -84,6 +95,41 @@ export default function MatchDetailDrawer({
   const product = getMatchField(match, "productOffered", "product_offered");
   const supplier = getMatchField(match, "supplierName", "supplier_name");
   const currency = getMatchField(match, "currency", "currency") || "INR";
+  const orderId = getMatchField(match, "orderId", "order_id");
+  const orderStatus = getMatchField(match, "orderStatus", "order_status");
+  const canPlaceOrder = Number(percentage) > 0 && !orderId;
+  const unit = getMatchField(match, "requirementUnit", "requirement_unit") || "units";
+  const mid = matchId(match);
+
+  const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+    setPlaceError("");
+    setPlaceSuccess("");
+    const qty = Number(quantity);
+    if (!mid || !requirementId || !qty || qty <= 0) {
+      setPlaceError("Enter a valid quantity.");
+      return;
+    }
+    setPlacing(true);
+    try {
+      await api.placeOrder(requirementId, mid, {
+        quantityOrdered: qty,
+        clientNotes: clientNotes.trim() || undefined,
+      });
+      const detail = await api.getMatchDetail(requirementId, mid);
+      if (detail.match) {
+        setMatch(detail.match);
+      }
+      setPlaceSuccess(
+        "Order request sent. You and the supplier will receive email notifications.",
+      );
+      onOrderPlaced?.();
+    } catch (err) {
+      setPlaceError(err.message);
+    } finally {
+      setPlacing(false);
+    }
+  };
 
   return (
     <div className="match-drawer" role="dialog" aria-modal="true" aria-labelledby="match-detail-title">
@@ -229,6 +275,63 @@ export default function MatchDetailDrawer({
                 )}
               />
             </dl>
+          </section>
+
+          <section className="match-detail__block match-detail__block--order">
+            <h4>Place order</h4>
+            {orderId ? (
+              <div className="stack">
+                <p className="card__meta">
+                  You already sent an order request for this match.
+                </p>
+                <OrderStatusBadge record={{ status: orderStatus }} />
+                {getMatchField(match, "orderQuantity", "order_quantity") != null && (
+                  <p className="card__meta">
+                    Quantity: {getMatchField(match, "orderQuantity", "order_quantity")}{" "}
+                    {unit}
+                  </p>
+                )}
+              </div>
+            ) : canPlaceOrder ? (
+              <form className="stack" onSubmit={handlePlaceOrder}>
+                <p className="card__meta">
+                  Send a formal request to {supplier}. They can accept or decline in
+                  their dashboard; both of you get email confirmation.
+                </p>
+                <div className="field">
+                  <label htmlFor="orderQty">Quantity ({unit})</label>
+                  <input
+                    id="orderQty"
+                    type="number"
+                    min="1"
+                    required
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="orderNotes">Notes for supplier (optional)</label>
+                  <textarea
+                    id="orderNotes"
+                    rows={3}
+                    value={clientNotes}
+                    onChange={(e) => setClientNotes(e.target.value)}
+                    placeholder="Delivery window, PO number, payment terms…"
+                  />
+                </div>
+                {placeError && <div className="alert alert--error">{placeError}</div>}
+                {placeSuccess && (
+                  <div className="alert alert--success">{placeSuccess}</div>
+                )}
+                <button type="submit" className="btn btn--accent" disabled={placing}>
+                  {placing ? "Sending request…" : "Place order with supplier"}
+                </button>
+              </form>
+            ) : (
+              <p className="card__meta">
+                Orders cannot be placed on rejected or zero-score matches.
+              </p>
+            )}
           </section>
 
           <section className="match-detail__block match-detail__block--supplier">

@@ -9,6 +9,7 @@ import matchRoutes from "./routes/match.routes";
 
 import authRoutes from "./routes/auth.routes";
 import adminRoutes from "./routes/admin.routes";
+import orderRoutes from "./routes/order.routes";
 
 import { authenticate } from "./middleware/auth.middleware";
 
@@ -35,5 +36,6 @@ app.use("/api/suppliers", supplierRoutes);
 app.use("/api", offeringRoutes);
 app.use("/api", matchRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api", orderRoutes);
 
 export default app;

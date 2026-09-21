@@ -12,7 +12,19 @@ const TABS = [
   { id: "requirements", label: "Requirements" },
   { id: "offerings", label: "Offerings" },
   { id: "matches", label: "Matches" },
+  { id: "orders", label: "Orders" },
 ];
+
+function orderStatusBadge(status) {
+  const map = {
+    PENDING: "badge--warning",
+    ACCEPTED: "badge--success",
+    REJECTED: "badge--danger",
+    CANCELLED: "badge--neutral",
+  };
+  const variant = map[status] || "badge--neutral";
+  return <span className={`badge ${variant}`}>{titleCase(status)}</span>;
+}
 
 function shortId(id) {
   if (!id) return "—";
@@ -30,6 +42,7 @@ export default function AdminDashboard() {
   const [requirements, setRequirements] = useState([]);
   const [offerings, setOfferings] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   const loadTab = useCallback(async (activeTab) => {
     setLoading(true);
@@ -71,6 +84,11 @@ export default function AdminDashboard() {
           setMatches(res.data);
           break;
         }
+        case "orders": {
+          const res = await api.adminOrders();
+          setOrders(res.data);
+          break;
+        }
         default:
           break;
       }
@@ -91,7 +109,7 @@ export default function AdminDashboard() {
         <div className="page-header page-header--row">
           <div>
             <h1>Admin console</h1>
-            <p>Full visibility across users, clients, suppliers, requirements, offerings, and matches.</p>
+            <p>Full visibility across users, clients, suppliers, requirements, offerings, matches, and orders.</p>
           </div>
           <span className="badge badge--warning">Superuser</span>
         </div>
@@ -260,6 +278,54 @@ export default function AdminDashboard() {
                     },
                   ]}
                   rows={matches}
+                />
+              )}
+
+              {tab === "orders" && (
+                <AdminDataTable
+                  columns={[
+                    { key: "company_name", label: "Client" },
+                    { key: "client_email", label: "Client email" },
+                    { key: "supplier_name", label: "Supplier" },
+                    { key: "product_offered", label: "Product" },
+                    {
+                      key: "quantity_ordered",
+                      label: "Qty",
+                      render: (r) => `${r.quantity_ordered} ${r.unit}`,
+                    },
+                    {
+                      key: "match_percentage",
+                      label: "Match",
+                      render: (r) => `${r.match_percentage}%`,
+                    },
+                    {
+                      key: "status",
+                      label: "Supplier response",
+                      render: (r) => orderStatusBadge(r.status),
+                    },
+                    {
+                      key: "client_notes",
+                      label: "Client notes",
+                      render: (r) => r.client_notes || "—",
+                    },
+                    {
+                      key: "supplier_response_notes",
+                      label: "Supplier notes",
+                      render: (r) => r.supplier_response_notes || "—",
+                    },
+                    { key: "delivery_location", label: "Deliver to" },
+                    {
+                      key: "created_at",
+                      label: "Placed",
+                      render: (r) => formatDate(r.created_at),
+                    },
+                    {
+                      key: "updated_at",
+                      label: "Updated",
+                      render: (r) => formatDate(r.updated_at),
+                    },
+                  ]}
+                  rows={orders}
                 />
               )}
             </>

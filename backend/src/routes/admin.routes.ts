@@ -3,6 +3,7 @@ import { authenticate, requireRole } from "../middleware/auth.middleware";
 import {
   adminClientsController,
   adminMatchesController,
+  adminOrdersController,
   adminOfferingsController,
   adminOverviewController,
   adminRequirementsController,
@@ -21,5 +22,6 @@ router.get("/suppliers", adminSuppliersController);
 router.get("/requirements", adminRequirementsController);
 router.get("/offerings", adminOfferingsController);
 router.get("/matches", adminMatchesController);
+router.get("/orders", adminOrdersController);
 
 export default router;

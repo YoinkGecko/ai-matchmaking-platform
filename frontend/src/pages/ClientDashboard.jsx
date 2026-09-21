@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import ClientOrderCard from "../components/ClientOrderCard";
 import FadeIn from "../components/FadeIn";
 import ProfileLinkBanner from "../components/ProfileLinkBanner";
 import { useAuth } from "../context/AuthContext";
@@ -26,6 +27,7 @@ export default function ClientDashboard() {
   const { profileId } = useAuth();
   const [client, setClient] = useState(null);
   const [requirements, setRequirements] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -40,12 +42,14 @@ export default function ClientDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [clientRes, reqRes] = await Promise.all([
+      const [clientRes, reqRes, ordersRes] = await Promise.all([
         api.getClient(profileId),
         api.getRequirements(profileId),
+        api.getMyClientOrders().catch(() => ({ data: [] })),
       ]);
       setClient(clientRes.data);
       setRequirements(reqRes.data || []);
+      setOrders(ordersRes.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -137,6 +141,10 @@ export default function ClientDashboard() {
                 {requirements.filter((r) => pick(r, "status", "status") === "OPEN").length}
               </div>
               <div className="stat-card__label">Open</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__value">{orders.length}</div>
+              <div className="stat-card__label">Orders</div>
             </div>
           </div>
         </aside>
@@ -276,6 +284,29 @@ export default function ClientDashboard() {
                 {submitting ? "Saving…" : "Submit requirement"}
               </button>
             </form>
+          )}
+
+          <p className="section-title">Your orders</p>
+          {!loading && profileId && orders.length === 0 ? (
+            <div className="card empty">
+              <h3>No orders yet</h3>
+              <p>
+                Open a match from a requirement and use &quot;Place order with supplier&quot;
+                after reviewing scores.
+              </p>
+            </div>
+          ) : (
+            <div className="match-grid">
+              {orders.map((order, index) => (
+                <div
+                  key={pick(order, "id", "id")}
+                  className="fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <ClientOrderCard order={order} />
+                </div>
+              ))}
+            </div>
           )}
 
           <p className="section-title">Your requirements</p>

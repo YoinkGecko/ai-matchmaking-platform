@@ -1706,6 +1706,15 @@ h1 {
   word-break: break-word;
 }
 
+.match-detail__block--order {
+  border-color: #ffd4c4;
+  background: var(--accent-soft);
+}
+
+.order-card .card-top {
+  align-items: flex-start;
+}
+
 .match-detail__block--supplier {
   background: #fff;
   border-color: #ffd4c4;

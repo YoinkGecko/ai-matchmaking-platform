@@ -131,7 +131,12 @@ export const getMatchesForRequirement = async (requirementId: string) => {
       s.contact_person,
       s.email AS supplier_email,
       s.phone AS supplier_phone,
-      s.business_location
+      s.business_location,
+
+      ord.id AS order_id,
+      ord.status AS order_status,
+      ord.quantity_ordered AS order_quantity,
+      ord.created_at AS order_created_at
 
     FROM matches m
 
@@ -143,6 +148,9 @@ export const getMatchesForRequirement = async (requirementId: string) => {
 
     JOIN suppliers s
       ON s.id = m.supplier_id
+
+    LEFT JOIN orders ord
+      ON ord.match_id = m.id
 
     WHERE m.requirement_id = $1
 
@@ -191,7 +199,14 @@ export const getMatchDetail = async (requirementId: string, matchId: string) => 
       s.contact_person,
       s.email AS supplier_email,
       s.phone AS supplier_phone,
-      s.business_location
+      s.business_location,
+
+      ord.id AS order_id,
+      ord.status AS order_status,
+      ord.quantity_ordered AS order_quantity,
+      ord.client_notes AS order_client_notes,
+      ord.supplier_response_notes AS order_supplier_notes,
+      ord.created_at AS order_created_at
 
     FROM matches m
 
@@ -203,6 +218,9 @@ export const getMatchDetail = async (requirementId: string, matchId: string) => 
 
     JOIN suppliers s
       ON s.id = m.supplier_id
+
+    LEFT JOIN orders ord
+      ON ord.match_id = m.id
 
     WHERE m.requirement_id = $1
       AND m.id = $2

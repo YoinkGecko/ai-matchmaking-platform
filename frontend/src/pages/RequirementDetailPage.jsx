@@ -109,6 +109,7 @@ export default function RequirementDetailPage() {
           match={selectedMatch}
           requirementId={requirementId}
           onClose={() => setSelectedMatch(null)}
+          onOrderPlaced={loadMatches}
         />
       )}
     </div>
