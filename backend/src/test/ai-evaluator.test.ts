@@ -11,10 +11,10 @@ const test = async () => {
       qualityGrade: null,
     },
     {
-      productOffered: "food",
-      category: "packaged burger",
-      specifications: "4 tomato and bun",
-      qualityGrade: "Food Grade",
+      productOffered: "chips",
+      category: "fast food",
+      specifications: null,
+      qualityGrade: null,
     }
   );
 
