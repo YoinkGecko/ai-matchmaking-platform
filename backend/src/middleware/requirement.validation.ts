@@ -16,6 +16,7 @@ export const validateCreateRequirement = (req: Request) => {
     budgetType,
     deliveryLocation,
     requiredByDate,
+    allowMultipleSuppliers,
   } = req.body;
 
   if (
@@ -61,6 +62,10 @@ export const validateCreateRequirement = (req: Request) => {
     !/^\d{4}-\d{2}-\d{2}$/.test(requiredByDate)
   ) {
     errors.requiredByDate = "Required by date must use YYYY-MM-DD format";
+  }
+
+  if (typeof allowMultipleSuppliers !== "boolean") {
+    errors.allowMultipleSuppliers = "allowMultipleSuppliers must be a boolean";
   }
 
   return errors;

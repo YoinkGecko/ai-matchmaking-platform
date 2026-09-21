@@ -34,6 +34,7 @@ export const createRequirementController = async (
       currency,
       budgetType,
       deliveryLocation,
+      allowMultipleSuppliers,
       requiredByDate,
     } = req.body;
 
@@ -50,6 +51,7 @@ export const createRequirementController = async (
       currency,
       budgetType,
       deliveryLocation,
+      allowMultipleSuppliers,
       requiredByDate,
     });
 
