@@ -11,9 +11,9 @@ export async function requestOtpController(req: Request, res: Response) {
       });
     }
 
-    if (role !== "CLIENT" && role !== "SUPPLIER") {
+    if (role !== "CLIENT" && role !== "SUPPLIER" && role !== "ADMIN") {
       return res.status(400).json({
-        message: "role must be CLIENT or SUPPLIER",
+        message: "role must be CLIENT, SUPPLIER, or ADMIN",
       });
     }
 
@@ -40,9 +40,9 @@ export async function verifyOtpController(req: Request, res: Response) {
       });
     }
 
-    if (role !== "CLIENT" && role !== "SUPPLIER") {
+    if (role !== "CLIENT" && role !== "SUPPLIER" && role !== "ADMIN") {
       return res.status(400).json({
-        message: "role must be CLIENT or SUPPLIER",
+        message: "role must be CLIENT, SUPPLIER, or ADMIN",
       });
     }
 

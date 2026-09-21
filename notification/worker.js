@@ -3,11 +3,11 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: Number(process.env.SMTP_PORT) || 465,
   secure: true,
   auth: {
-    user: "kartikeya.anjul@gmail.com",
+    user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
@@ -23,7 +23,7 @@ const worker = new Worker(
       console.log(job.data);
 
       const info = await transporter.sendMail({
-        from: "kartikeya.anjul@gmail.com",
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
         to: email,
         subject,
         text: body,

@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-interface AuthPayload {
+export type UserRole = "CLIENT" | "SUPPLIER" | "ADMIN";
+
+export interface AuthPayload {
   userId: string;
   email: string;
-  role: "CLIENT" | "SUPPLIER";
+  role: UserRole;
 }
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
@@ -37,7 +39,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-export function requireRole(role: "CLIENT" | "SUPPLIER") {
+export function requireRole(role: UserRole) {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = res.locals.user as AuthPayload;
 
@@ -50,5 +52,3 @@ export function requireRole(role: "CLIENT" | "SUPPLIER") {
     next();
   };
 }
-
-

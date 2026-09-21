@@ -1,6 +1,7 @@
 import { findSimilarOfferings } from "./matching.service";
 import { evaluateMatchCandidate } from "./match-candidate.service";
-import { saveMatch } from "./match.service";
+import { getMatchesForRequirement, saveMatch } from "./match.service";
+import { notifyMatchResults } from "./match-notification.service";
 
 export const runMatching = async (requirementId: string) => {
   const offerings = await findSimilarOfferings(requirementId, 20);
@@ -89,5 +90,7 @@ export const runMatching = async (requirementId: string) => {
     savedMatches.push(savedMatch);
   }
 
-  return savedMatches;
+  await notifyMatchResults(requirementId, savedMatches);
+
+  return getMatchesForRequirement(requirementId);
 };

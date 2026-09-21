@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
-import { createSupplier, getSupplierById } from "../services/supplier.service";
+import {
+  createSupplier,
+  getSupplierByEmail,
+  getSupplierById,
+  updateSupplierByEmail,
+} from "../services/supplier.service";
+import { AuthPayload } from "../middleware/auth.middleware";
 
 export const createSupplierController = async (req: Request, res: Response) => {
   try {
@@ -52,6 +58,69 @@ export const getSupplierController = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Failed to get supplier",
+    });
+  }
+};
+
+export const getMySupplierProfileController = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const user = res.locals.user as AuthPayload;
+    const supplier = await getSupplierByEmail(user.email);
+
+    if (!supplier) {
+      res.status(404).json({
+        success: false,
+        message: "Supplier profile not found",
+      });
+      return;
+    }
+
+    res.status(200).json({ success: true, data: supplier });
+  } catch (error) {
+    console.error("Get my supplier profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get profile",
+    });
+  }
+};
+
+export const updateMySupplierProfileController = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const user = res.locals.user as AuthPayload;
+    const { supplierName, contactPerson, phone, businessLocation } = req.body;
+
+    const supplier = await updateSupplierByEmail(user.email, {
+      supplierName,
+      contactPerson,
+      phone: phone === "" ? null : phone,
+      businessLocation,
+    });
+
+    if (!supplier) {
+      res.status(404).json({
+        success: false,
+        message: "Supplier profile not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: supplier,
+      message: "Profile updated successfully",
+    });
+  } catch (error) {
+    console.error("Update my supplier profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
     });
   }
 };

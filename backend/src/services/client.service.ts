@@ -42,3 +42,52 @@ export const getClientById = async (id: string) => {
 
   return result.rows[0] ?? null;
 };
+
+export const getClientByEmail = async (email: string) => {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  const result = await pool.query(
+    `SELECT * FROM clients WHERE email = $1`,
+    [normalizedEmail],
+  );
+
+  return result.rows[0] ?? null;
+};
+
+export interface UpdateClientProfileInput {
+  companyName?: string;
+  contactPerson?: string;
+  phone?: string | null;
+}
+
+export const updateClientByEmail = async (
+  email: string,
+  data: UpdateClientProfileInput,
+) => {
+  const existing = await getClientByEmail(email);
+
+  if (!existing) {
+    return null;
+  }
+
+  const companyName = data.companyName ?? existing.company_name;
+  const contactPerson = data.contactPerson ?? existing.contact_person;
+  const phone =
+    data.phone !== undefined ? data.phone : existing.phone;
+
+  const result = await pool.query(
+    `
+    UPDATE clients
+    SET
+      company_name = $1,
+      contact_person = $2,
+      phone = $3,
+      updated_at = NOW()
+    WHERE email = $4
+    RETURNING *;
+    `,
+    [companyName, contactPerson, phone ?? null, email.toLowerCase().trim()],
+  );
+
+  return result.rows[0];
+};

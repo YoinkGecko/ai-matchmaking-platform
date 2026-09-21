@@ -95,19 +95,44 @@ export const getMatchesForRequirement = async (requirementId: string) => {
     SELECT
       m.*,
 
+      r.product_requirement,
+      r.category AS requirement_category,
+      r.quantity_required,
+      r.unit AS requirement_unit,
+      r.budget AS requirement_budget,
+      r.currency AS requirement_currency,
+      r.budget_type AS requirement_budget_type,
+      r.delivery_location AS requirement_delivery_location,
+      r.required_by_date,
+      r.specifications AS requirement_specifications,
+      r.quality_grade AS requirement_quality_grade,
+      r.additional_notes AS requirement_additional_notes,
+
       o.product_offered,
-      o.category,
+      o.category AS offering_category,
       o.available_quantity,
-      o.unit,
+      o.unit AS offering_unit,
+      o.specifications AS offering_specifications,
+      o.quality_grade AS offering_quality_grade,
       o.price,
       o.currency,
       o.price_type,
+      o.pricing_notes,
       o.fulfillment_location,
+      o.minimum_delivery_days,
+      o.maximum_delivery_days,
+      o.additional_notes AS offering_additional_notes,
 
       s.supplier_name,
+      s.contact_person,
+      s.email AS supplier_email,
+      s.phone AS supplier_phone,
       s.business_location
 
     FROM matches m
+
+    JOIN requirements r
+      ON r.id = m.requirement_id
 
     JOIN offerings o
       ON o.id = m.offering_id
@@ -121,6 +146,106 @@ export const getMatchesForRequirement = async (requirementId: string) => {
   `;
 
   const result = await pool.query(query, [requirementId]);
+
+  return result.rows;
+};
+
+export const getMatchDetail = async (requirementId: string, matchId: string) => {
+  const query = `
+    SELECT
+      m.*,
+
+      r.product_requirement,
+      r.category AS requirement_category,
+      r.quantity_required,
+      r.unit AS requirement_unit,
+      r.budget AS requirement_budget,
+      r.currency AS requirement_currency,
+      r.budget_type AS requirement_budget_type,
+      r.delivery_location AS requirement_delivery_location,
+      r.required_by_date,
+      r.specifications AS requirement_specifications,
+      r.quality_grade AS requirement_quality_grade,
+      r.additional_notes AS requirement_additional_notes,
+
+      o.product_offered,
+      o.category AS offering_category,
+      o.available_quantity,
+      o.unit AS offering_unit,
+      o.specifications AS offering_specifications,
+      o.quality_grade AS offering_quality_grade,
+      o.price,
+      o.currency,
+      o.price_type,
+      o.pricing_notes,
+      o.fulfillment_location,
+      o.minimum_delivery_days,
+      o.maximum_delivery_days,
+      o.additional_notes AS offering_additional_notes,
+
+      s.supplier_name,
+      s.contact_person,
+      s.email AS supplier_email,
+      s.phone AS supplier_phone,
+      s.business_location
+
+    FROM matches m
+
+    JOIN requirements r
+      ON r.id = m.requirement_id
+
+    JOIN offerings o
+      ON o.id = m.offering_id
+
+    JOIN suppliers s
+      ON s.id = m.supplier_id
+
+    WHERE m.requirement_id = $1
+      AND m.id = $2
+  `;
+
+  const result = await pool.query(query, [requirementId, matchId]);
+
+  return result.rows[0] ?? null;
+};
+
+export const getMatchesForSupplier = async (supplierId: string) => {
+  const query = `
+    SELECT
+      m.*,
+
+      r.product_requirement,
+      r.category AS requirement_category,
+      r.quantity_required,
+      r.unit AS requirement_unit,
+      r.delivery_location,
+      r.required_by_date,
+      r.status AS requirement_status,
+
+      c.company_name,
+      c.contact_person,
+
+      o.product_offered,
+      o.price,
+      o.currency
+
+    FROM matches m
+
+    JOIN requirements r
+      ON r.id = m.requirement_id
+
+    JOIN clients c
+      ON c.id = r.client_id
+
+    JOIN offerings o
+      ON o.id = m.offering_id
+
+    WHERE m.supplier_id = $1
+
+    ORDER BY m.match_score DESC;
+  `;
+
+  const result = await pool.query(query, [supplierId]);
 
   return result.rows;
 };

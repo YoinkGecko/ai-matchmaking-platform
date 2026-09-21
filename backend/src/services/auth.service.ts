@@ -4,9 +4,71 @@ import { verifyOtp } from "./otp.service";
 import { generateAndStoreOtp } from "./otp.service";
 import { emailQueue } from "./email-queue.service";
 
-type Role = "CLIENT" | "SUPPLIER";
+export type Role = "CLIENT" | "SUPPLIER" | "ADMIN";
+
+function getAdminEmails(): string[] {
+  const raw = process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "";
+  return raw
+    .split(",")
+    .map((e) => e.toLowerCase().trim())
+    .filter(Boolean);
+}
+
+async function ensureAdminUser(email: string) {
+  const existing = await pool.query(
+    `SELECT id, role FROM users WHERE email = $1`,
+    [email],
+  );
+
+  if (existing.rows.length === 0) {
+    const inserted = await pool.query(
+      `INSERT INTO users (email, role) VALUES ($1, 'ADMIN') RETURNING id`,
+      [email],
+    );
+    return inserted.rows[0].id as string;
+  }
+
+  if (existing.rows[0].role !== "ADMIN") {
+    throw new Error("This email is registered with a different role");
+  }
+
+  return existing.rows[0].id as string;
+}
+
+async function requestAdminOtp(email: string) {
+  const normalizedEmail = email.toLowerCase().trim();
+  const allowed = getAdminEmails();
+
+  if (allowed.length === 0) {
+    throw new Error("Admin access is not configured (set ADMIN_EMAILS)");
+  }
+
+  if (!allowed.includes(normalizedEmail)) {
+    throw new Error("This email is not authorized for admin access");
+  }
+
+  await ensureAdminUser(normalizedEmail);
+
+  const otp = await generateAndStoreOtp(normalizedEmail);
+
+  await emailQueue.add("send-otp", {
+    email: normalizedEmail,
+    subject: "Admin login OTP",
+    body: `Your admin OTP is ${otp}. It expires in 5 minutes.`,
+  });
+
+  return {
+    userId: null,
+    email: normalizedEmail,
+    role: "ADMIN" as const,
+  };
+}
 
 export async function requestOtp(email: string, role: Role) {
+  if (role === "ADMIN") {
+    return requestAdminOtp(email);
+  }
+
   const normalizedEmail = email.toLowerCase().trim();
 
   const table = role === "CLIENT" ? "clients" : "suppliers";
@@ -65,17 +127,21 @@ export async function requestOtp(email: string, role: Role) {
   };
 }
 
-export async function verifyLoginOtp(
-  email: string,
-  otp: string,
-  role: "CLIENT" | "SUPPLIER",
-) {
+export async function verifyLoginOtp(email: string, otp: string, role: Role) {
   const normalizedEmail = email.toLowerCase().trim();
 
   const valid = await verifyOtp(normalizedEmail, otp);
 
   if (!valid) {
     throw new Error("Invalid or expired OTP");
+  }
+
+  if (role === "ADMIN") {
+    const allowed = getAdminEmails();
+    if (!allowed.includes(normalizedEmail)) {
+      throw new Error("This email is not authorized for admin access");
+    }
+    await ensureAdminUser(normalizedEmail);
   }
 
   const result = await pool.query(

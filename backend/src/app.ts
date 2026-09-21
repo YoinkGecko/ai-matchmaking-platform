@@ -8,6 +8,7 @@ import offeringRoutes from "./routes/offering.routes";
 import matchRoutes from "./routes/match.routes";
 
 import authRoutes from "./routes/auth.routes";
+import adminRoutes from "./routes/admin.routes";
 
 import { authenticate } from "./middleware/auth.middleware";
 
@@ -33,5 +34,6 @@ app.use("/api", requirementRoutes);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/api", offeringRoutes);
 app.use("/api", matchRoutes);
+app.use("/api/admin", adminRoutes);
 
 export default app;
