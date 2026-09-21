@@ -3,6 +3,8 @@ import { evaluateDelivery } from "./delivery-matching.service";
 import { calculateQuantityCoverage } from "./quantity-matching.service";
 import { evaluateProduct } from "./product-compatibility.service";
 
+import { calculateMatchScore } from "./match-score.service";
+
 export interface MatchRequirement {
   productRequirement: string;
   category: string;
@@ -102,6 +104,23 @@ export const evaluateMatchCandidate = async (
     },
   });
 
+  const matchScore = calculateMatchScore({
+    semanticScore: offering.semanticScore,
+
+    productDecision: productResult.decision as
+      | "EXACT_MATCH"
+      | "CLOSE_MATCH"
+      | "RELATED_BUT_DIFFERENT"
+      | "INCOMPATIBLE"
+      | "CLEAR_REJECT",
+
+    quantityCoverage,
+
+    budgetStatus: budgetResult.status,
+
+    deliveryStatus: deliveryResult.status,
+  });
+
   return {
     offeringId: offering.id,
     supplierId: offering.supplierId,
@@ -121,5 +140,7 @@ export const evaluateMatchCandidate = async (
     budget: budgetResult,
 
     delivery: deliveryResult,
+
+    score: matchScore,
   };
 };
