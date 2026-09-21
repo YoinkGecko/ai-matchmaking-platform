@@ -1,4 +1,6 @@
 import pool from "../db";
+import jwt from "jsonwebtoken";
+import { verifyOtp } from "./otp.service";
 import { generateAndStoreOtp } from "./otp.service";
 import { emailQueue } from "./email-queue.service";
 
@@ -60,5 +62,57 @@ export async function requestOtp(email: string, role: Role) {
     userId,
     email: normalizedEmail,
     role,
+  };
+}
+
+export async function verifyLoginOtp(
+  email: string,
+  otp: string,
+  role: "CLIENT" | "SUPPLIER",
+) {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  const valid = await verifyOtp(normalizedEmail, otp);
+
+  if (!valid) {
+    throw new Error("Invalid or expired OTP");
+  }
+
+  const result = await pool.query(
+    `SELECT id, email, role
+     FROM users
+     WHERE email = $1`,
+    [normalizedEmail],
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error("User not found");
+  }
+
+  const user = result.rows[0];
+
+  if (user.role !== role) {
+    throw new Error("Role does not match this account");
+  }
+
+  const token = jwt.sign(
+    {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    },
+    process.env.JWT_SECRET!,
+    {
+      expiresIn: "7d",
+    },
+  );
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    },
   };
 }
