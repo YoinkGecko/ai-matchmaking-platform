@@ -57,3 +57,11 @@ CREATE TABLE matches (
             )
         )
 );
+
+
+CREATE INDEX idx_matches_requirement
+ON matches(requirement_id);
+
+
+CREATE INDEX idx_matches_score
+ON matches(requirement_id, match_score DESC);
