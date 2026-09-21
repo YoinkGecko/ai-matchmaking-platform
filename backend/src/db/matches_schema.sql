@@ -65,3 +65,9 @@ ON matches(requirement_id);
 
 CREATE INDEX idx_matches_score
 ON matches(requirement_id, match_score DESC);
+
+
+ALTER TABLE matches
+ADD CONSTRAINT matches_requirement_offering_unique
+UNIQUE (requirement_id, offering_id);
+

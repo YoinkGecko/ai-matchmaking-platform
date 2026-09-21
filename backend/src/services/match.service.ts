@@ -45,6 +45,22 @@ export const saveMatch = async (match: MatchRecord) => {
       $7, $8, $9, $10,
       $11, $12, $13
     )
+
+    ON CONFLICT (requirement_id, offering_id)
+    DO UPDATE SET
+      supplier_id = EXCLUDED.supplier_id,
+      match_score = EXCLUDED.match_score,
+      match_percentage = EXCLUDED.match_percentage,
+      semantic_score = EXCLUDED.semantic_score,
+      product_decision = EXCLUDED.product_decision,
+      quantity_coverage = EXCLUDED.quantity_coverage,
+      budget_status = EXCLUDED.budget_status,
+      delivery_status = EXCLUDED.delivery_status,
+      product_reason = EXCLUDED.product_reason,
+      budget_explanation = EXCLUDED.budget_explanation,
+      delivery_explanation = EXCLUDED.delivery_explanation,
+      updated_at = NOW()
+
     RETURNING *;
   `;
 
