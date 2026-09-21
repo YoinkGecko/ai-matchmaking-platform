@@ -7,6 +7,8 @@ import supplierRoutes from "./routes/supplier.routes";
 import offeringRoutes from "./routes/offering.routes";
 import matchRoutes from "./routes/match.routes";
 
+import authRoutes from "./routes/auth.routes";
+
 const app = express();
 
 app.use(cors());
@@ -18,6 +20,7 @@ app.get("/health", (_req, res) => {
   });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api", requirementRoutes);
 app.use("/api/suppliers", supplierRoutes);
