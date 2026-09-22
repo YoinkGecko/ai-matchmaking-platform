@@ -1,0 +1,7 @@
+client:- kartikeya.anjul@gmail.com
+uuid:- 
+
+supplier:- apex.grain@wisdommatch.demo
+uuid:- 44444444-4444-4444-8444-444444444401
+
+Admin:- admin@gmail.com
