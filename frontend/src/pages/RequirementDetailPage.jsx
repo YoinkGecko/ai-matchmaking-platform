@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import FadeIn from "../components/FadeIn";
 import MatchCard from "../components/MatchCard";
@@ -7,6 +7,8 @@ import MatchDetailDrawer from "../components/MatchDetailDrawer";
 
 export default function RequirementDetailPage() {
   const { requirementId } = useParams();
+  const [searchParams] = useSearchParams();
+  const highlightOfferingId = searchParams.get("offering");
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
@@ -30,6 +32,15 @@ export default function RequirementDetailPage() {
   useEffect(() => {
     loadMatches();
   }, [loadMatches]);
+
+  useEffect(() => {
+    if (!highlightOfferingId || matches.length === 0) return;
+    const found = matches.find(
+      (m) =>
+        m.offering_id === highlightOfferingId || m.offeringId === highlightOfferingId,
+    );
+    if (found) setSelectedMatch(found);
+  }, [highlightOfferingId, matches]);
 
   const runMatching = async () => {
     setRunning(true);

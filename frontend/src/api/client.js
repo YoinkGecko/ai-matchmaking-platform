@@ -89,6 +89,8 @@ export const api = {
   getRequirements: (clientId) =>
     request(`/api/clients/${clientId}/requirements`),
 
+  getMarketplaceOfferings: () => request("/api/marketplace/offerings"),
+
   createRequirement: (clientId, data) =>
     request(`/api/clients/${clientId}/requirements`, {
       method: "POST",
