@@ -1,6 +1,10 @@
 import pool from "../db";
 import { generateEmbedding } from "./embedding.service";
 import { buildOfferingText } from "./matching-text.service";
+import {
+  offeringEmbeddingText,
+  offeringSemanticFieldsChanged,
+} from "./offering-embedding.util";
 
 export interface CreateOfferingInput {
   supplierId: string;
@@ -127,4 +131,118 @@ export const getOfferingsBySupplierId = async (supplierId: string) => {
   const result = await pool.query(query, [supplierId]);
 
   return result.rows;
+};
+
+export const getOfferingById = async (offeringId: string) => {
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM offerings
+    WHERE id = $1
+    `,
+    [offeringId],
+  );
+
+  return result.rows[0] ?? null;
+};
+
+export type UpdateOfferingInput = Omit<CreateOfferingInput, "supplierId" | "photoUrls">;
+
+export const updateOffering = async (
+  offeringId: string,
+  supplierId: string,
+  data: UpdateOfferingInput,
+) => {
+  const existing = await getOfferingById(offeringId);
+
+  if (!existing || String(existing.supplier_id) !== String(supplierId)) {
+    return null;
+  }
+
+  let embeddingJson: string | null = null;
+  if (offeringSemanticFieldsChanged(existing, data)) {
+    try {
+      const embedding = await generateEmbedding(offeringEmbeddingText(data));
+      embeddingJson = JSON.stringify(embedding);
+    } catch (embeddingError) {
+      console.warn(
+        "Offering update: embedding regeneration skipped",
+        embeddingError,
+      );
+    }
+  }
+
+  const baseValues = [
+    data.productOffered,
+    data.category,
+    data.availableQuantity,
+    data.unit,
+    data.specifications ?? null,
+    data.qualityGrade ?? null,
+    data.price,
+    data.currency,
+    data.priceType,
+    data.pricingNotes ?? null,
+    data.fulfillmentLocation,
+    data.minimumDeliveryDays,
+    data.maximumDeliveryDays,
+    data.additionalNotes ?? null,
+  ];
+
+  const query = embeddingJson
+    ? `
+    UPDATE offerings
+    SET
+      product_offered = $2,
+      category = $3,
+      available_quantity = $4,
+      unit = $5,
+      specifications = $6,
+      quality_grade = $7,
+      price = $8,
+      currency = $9,
+      price_type = $10,
+      pricing_notes = $11,
+      fulfillment_location = $12,
+      minimum_delivery_days = $13,
+      maximum_delivery_days = $14,
+      additional_notes = $15,
+      embedding = $16::vector,
+      updated_at = NOW()
+    WHERE id = $1 AND supplier_id = $17
+    RETURNING *;
+  `
+    : `
+    UPDATE offerings
+    SET
+      product_offered = $2,
+      category = $3,
+      available_quantity = $4,
+      unit = $5,
+      specifications = $6,
+      quality_grade = $7,
+      price = $8,
+      currency = $9,
+      price_type = $10,
+      pricing_notes = $11,
+      fulfillment_location = $12,
+      minimum_delivery_days = $13,
+      maximum_delivery_days = $14,
+      additional_notes = $15,
+      updated_at = NOW()
+    WHERE id = $1 AND supplier_id = $16
+    RETURNING *;
+  `;
+
+  const values = embeddingJson
+    ? [offeringId, ...baseValues, embeddingJson, supplierId]
+    : [offeringId, ...baseValues, supplierId];
+
+  const result = await pool.query(query, values);
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  return { before: existing, after: result.rows[0] };
 };

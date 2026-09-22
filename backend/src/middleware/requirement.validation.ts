@@ -1,4 +1,25 @@
-import { Request } from "express";
+import { Request, Response, NextFunction } from "express";
+
+function num(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+/** Coerce JSON number fields before requirement validation. */
+export function coerceRequirementJsonBody(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
+  const body = req.body as Record<string, unknown>;
+  if (body.quantityRequired !== undefined) {
+    body.quantityRequired = num(body.quantityRequired);
+  }
+  if (body.budget !== undefined) {
+    body.budget = num(body.budget);
+  }
+  next();
+}
 
 export const validateCreateRequirement = (req: Request) => {
   const errors: Record<string, string> = {};

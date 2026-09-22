@@ -3,12 +3,18 @@ import { Router } from "express";
 import {
   createOfferingController,
   getSupplierOfferingsController,
+  updateMyOfferingController,
 } from "../controllers/offering.controller";
 
+import { authenticate, requireRole } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate";
 import { validateSupplierId } from "../middleware/supplier.validation";
 import { validateCreateOffering } from "../middleware/offering.validation";
-import { coerceOfferingMultipartBody } from "../middleware/offering-multipart.middleware";
+import { validateOfferingId } from "../middleware/uuid.validation";
+import {
+  coerceOfferingJsonBody,
+  coerceOfferingMultipartBody,
+} from "../middleware/offering-multipart.middleware";
 import { offeringPhotosUpload } from "../middleware/upload.middleware";
 import { Request, Response, NextFunction } from "express";
 
@@ -43,6 +49,16 @@ router.get(
   "/suppliers/:supplierId/offerings",
   validate(validateSupplierId),
   getSupplierOfferingsController,
+);
+
+router.patch(
+  "/suppliers/me/offerings/:offeringId",
+  authenticate,
+  requireRole("SUPPLIER"),
+  coerceOfferingJsonBody,
+  validate(validateOfferingId),
+  validate(validateCreateOffering),
+  updateMyOfferingController,
 );
 
 export default router;

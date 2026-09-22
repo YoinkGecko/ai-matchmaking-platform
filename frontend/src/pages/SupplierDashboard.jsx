@@ -22,6 +22,8 @@ const emptyOffering = {
   category: "",
   availableQuantity: "",
   unit: "units",
+  specifications: "",
+  qualityGrade: "",
   price: "",
   currency: "INR",
   priceType: "PER_UNIT",
@@ -31,6 +33,32 @@ const emptyOffering = {
   maximumDeliveryDays: "14",
   additionalNotes: "",
 };
+
+function offeringToForm(item) {
+  return {
+    productOffered: pick(item, "productOffered", "product_offered") || "",
+    category: pick(item, "category", "category") || "",
+    availableQuantity: String(
+      pick(item, "availableQuantity", "available_quantity") ?? "",
+    ),
+    unit: pick(item, "unit", "unit") || "units",
+    specifications: pick(item, "specifications", "specifications") || "",
+    qualityGrade: pick(item, "qualityGrade", "quality_grade") || "",
+    price: String(pick(item, "price", "price") ?? ""),
+    currency: pick(item, "currency", "currency") || "INR",
+    priceType: pick(item, "priceType", "price_type") || "PER_UNIT",
+    pricingNotes: pick(item, "pricingNotes", "pricing_notes") || "",
+    fulfillmentLocation:
+      pick(item, "fulfillmentLocation", "fulfillment_location") || "",
+    minimumDeliveryDays: String(
+      pick(item, "minimumDeliveryDays", "minimum_delivery_days") ?? "3",
+    ),
+    maximumDeliveryDays: String(
+      pick(item, "maximumDeliveryDays", "maximum_delivery_days") ?? "14",
+    ),
+    additionalNotes: pick(item, "additionalNotes", "additional_notes") || "",
+  };
+}
 
 export default function SupplierDashboard() {
   const { profileId } = useAuth();
@@ -43,7 +71,9 @@ export default function SupplierDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [editingOfferingId, setEditingOfferingId] = useState(null);
   const [form, setForm] = useState(emptyOffering);
+  const [info, setInfo] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [photoFiles, setPhotoFiles] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
@@ -80,29 +110,52 @@ export default function SupplierDashboard() {
     loadData();
   }, [loadData]);
 
-  const handleCreate = async (e) => {
+  const closeOfferingForm = () => {
+    setShowForm(false);
+    setEditingOfferingId(null);
+    setForm(emptyOffering);
+    setPhotoFiles([]);
+  };
+
+  const startEditOffering = (item) => {
+    setEditingOfferingId(pick(item, "id", "id"));
+    setForm(offeringToForm(item));
+    setPhotoFiles([]);
+    setShowForm(true);
+    setError("");
+    setInfo("");
+  };
+
+  const handleOfferingSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
+    const payload = {
+      ...form,
+      availableQuantity: Number(form.availableQuantity),
+      price: Number(form.price),
+      currency: form.currency || "INR",
+      minimumDeliveryDays: Number(form.minimumDeliveryDays),
+      maximumDeliveryDays: Number(form.maximumDeliveryDays),
+      specifications: form.specifications || undefined,
+      qualityGrade: form.qualityGrade || undefined,
+      pricingNotes: form.pricingNotes || undefined,
+      additionalNotes: form.additionalNotes || undefined,
+    };
     try {
-      await api.createOffering(
-        profileId,
-        {
-          ...form,
-          availableQuantity: Number(form.availableQuantity),
-          price: Number(form.price),
-          minimumDeliveryDays: Number(form.minimumDeliveryDays),
-          maximumDeliveryDays: Number(form.maximumDeliveryDays),
-          pricingNotes: form.pricingNotes || undefined,
-          additionalNotes: form.additionalNotes || undefined,
-        },
-        photoFiles,
-      );
-      setForm(emptyOffering);
-      setPhotoFiles([]);
-      setShowForm(false);
-      setTab("offerings");
-      await loadData();
+      if (editingOfferingId) {
+        await api.updateMyOffering(editingOfferingId, payload);
+        closeOfferingForm();
+        await loadData();
+        setInfo(
+          "Offering updated. Matched and messaging clients are emailed — large price drops are highlighted.",
+        );
+      } else {
+        await api.createOffering(profileId, payload, photoFiles);
+        closeOfferingForm();
+        setTab("offerings");
+        await loadData();
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -136,7 +189,7 @@ export default function SupplierDashboard() {
                 <button
                   type="button"
                   className="btn btn--primary"
-                  onClick={() => setShowForm((v) => !v)}
+                  onClick={() => (showForm ? closeOfferingForm() : setShowForm(true))}
                 >
                   {showForm ? "Cancel" : "New offering"}
                 </button>
@@ -179,6 +232,7 @@ export default function SupplierDashboard() {
       <ProfileLinkBanner label="supplier" />
 
       {error && <div className="alert alert--error">{error}</div>}
+      {info && <div className="alert alert--success">{info}</div>}
 
       <nav className="client-hub-tabs" aria-label="Supplier workspace">
         {SUPPLIER_TABS.map((item) => (
@@ -214,8 +268,10 @@ export default function SupplierDashboard() {
           {tab === "offerings" && (
             <div className="stack stack-lg">
               {showForm && (
-                <form className="card stack fade-in" onSubmit={handleCreate}>
-                  <h2>Publish offering</h2>
+                <form className="card stack fade-in" onSubmit={handleOfferingSubmit}>
+                  <h2>
+                    {editingOfferingId ? "Edit offering" : "Publish offering"}
+                  </h2>
                   <div className="field">
                     <label htmlFor="supplierDisplay">Supplier name</label>
                     <input id="supplierDisplay" value={supplierName} readOnly disabled />
@@ -305,6 +361,28 @@ export default function SupplierDashboard() {
                       </select>
                     </div>
                   </div>
+                  <div className="grid-2">
+                    <div className="field">
+                      <label htmlFor="specifications">Specifications</label>
+                      <textarea
+                        id="specifications"
+                        value={form.specifications}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, specifications: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="qualityGrade">Quality grade</label>
+                      <input
+                        id="qualityGrade"
+                        value={form.qualityGrade}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, qualityGrade: e.target.value }))
+                        }
+                      />
+                    </div>
+                  </div>
                   <div className="field">
                     <label htmlFor="pricingNotes">Pricing details / notes</label>
                     <textarea
@@ -354,21 +432,27 @@ export default function SupplierDashboard() {
                       }
                     />
                   </div>
-                  <div className="field">
-                    <label htmlFor="offeringPhotos">Product photos (optional)</label>
-                    <input
-                      id="offeringPhotos"
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      multiple
-                      onChange={(e) => setPhotoFiles(Array.from(e.target.files || []))}
-                    />
-                    <span className="field-hint">
-                      Up to 6 images. Shown to clients in marketplace and match results.
-                    </span>
-                  </div>
+                  {!editingOfferingId && (
+                    <div className="field">
+                      <label htmlFor="offeringPhotos">Product photos (optional)</label>
+                      <input
+                        id="offeringPhotos"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        multiple
+                        onChange={(e) => setPhotoFiles(Array.from(e.target.files || []))}
+                      />
+                      <span className="field-hint">
+                        Up to 6 images. Shown to clients in marketplace and match results.
+                      </span>
+                    </div>
+                  )}
                   <button type="submit" className="btn btn--accent" disabled={submitting}>
-                    {submitting ? "Saving…" : "Publish to marketplace"}
+                    {submitting
+                      ? "Saving…"
+                      : editingOfferingId
+                        ? "Save changes"
+                        : "Publish to marketplace"}
                   </button>
                 </form>
               )}
@@ -419,6 +503,15 @@ export default function SupplierDashboard() {
                           <p className="card__meta">
                             {qty} {unit} · {formatMoney(price, currency)} · {location}
                           </p>
+                          <div className="btn-row" style={{ marginTop: "0.75rem" }}>
+                            <button
+                              type="button"
+                              className="btn btn--secondary"
+                              onClick={() => startEditOffering(item)}
+                            >
+                              Edit listing
+                            </button>
+                          </div>
                         </div>
                       </article>
                     );

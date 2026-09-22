@@ -33,3 +33,32 @@ export function coerceOfferingMultipartBody(
 
   next();
 }
+
+/** Coerce JSON body numbers for offering create/update validation. */
+export function coerceOfferingJsonBody(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
+  if (req.is("multipart/form-data")) {
+    next();
+    return;
+  }
+
+  const body = req.body as Record<string, unknown>;
+
+  if (body.availableQuantity !== undefined) {
+    body.availableQuantity = num(body.availableQuantity);
+  }
+  if (body.price !== undefined) {
+    body.price = num(body.price);
+  }
+  if (body.minimumDeliveryDays !== undefined) {
+    body.minimumDeliveryDays = num(body.minimumDeliveryDays);
+  }
+  if (body.maximumDeliveryDays !== undefined) {
+    body.maximumDeliveryDays = num(body.maximumDeliveryDays);
+  }
+
+  next();
+}

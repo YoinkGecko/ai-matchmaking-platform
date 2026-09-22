@@ -33,6 +33,27 @@ const emptyRequirement = {
   allowMultipleSuppliers: false,
 };
 
+function requirementToForm(req) {
+  const due = pick(req, "requiredByDate", "required_by_date");
+  return {
+    productRequirement: pick(req, "productRequirement", "product_requirement") || "",
+    category: pick(req, "category", "category") || "",
+    quantityRequired: String(pick(req, "quantityRequired", "quantity_required") ?? ""),
+    unit: pick(req, "unit", "unit") || "units",
+    specifications: pick(req, "specifications", "specifications") || "",
+    qualityGrade: pick(req, "qualityGrade", "quality_grade") || "",
+    additionalNotes: pick(req, "additionalNotes", "additional_notes") || "",
+    budget: String(pick(req, "budget", "budget") ?? ""),
+    currency: pick(req, "currency", "currency") || "INR",
+    budgetType: pick(req, "budgetType", "budget_type") || "TOTAL",
+    deliveryLocation: pick(req, "deliveryLocation", "delivery_location") || "",
+    requiredByDate: due ? String(due).slice(0, 10) : "",
+    allowMultipleSuppliers: Boolean(
+      pick(req, "allowMultipleSuppliers", "allow_multiple_suppliers"),
+    ),
+  };
+}
+
 export default function ClientDashboard() {
   const navigate = useNavigate();
   const { profileId } = useAuth();
@@ -48,6 +69,7 @@ export default function ClientDashboard() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [editingRequirementId, setEditingRequirementId] = useState(null);
   const [form, setForm] = useState(emptyRequirement);
   const [submitting, setSubmitting] = useState(false);
   const [runningReqId, setRunningReqId] = useState(null);
@@ -142,24 +164,47 @@ export default function ClientDashboard() {
     });
   }, [marketplace, marketSearch, marketCategory]);
 
-  const handleCreate = async (e) => {
+  const closeRequirementForm = () => {
+    setShowForm(false);
+    setEditingRequirementId(null);
+    setForm(emptyRequirement);
+  };
+
+  const startEditRequirement = (req) => {
+    setEditingRequirementId(pick(req, "id", "id"));
+    setForm(requirementToForm(req));
+    setShowForm(true);
+    setError("");
+    setInfo("");
+  };
+
+  const handleRequirementSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
+    const payload = {
+      ...form,
+      quantityRequired: Number(form.quantityRequired),
+      budget: Number(form.budget),
+      specifications: form.specifications || undefined,
+      qualityGrade: form.qualityGrade || undefined,
+      additionalNotes: form.additionalNotes || undefined,
+    };
     try {
-      await api.createRequirement(profileId, {
-        ...form,
-        quantityRequired: Number(form.quantityRequired),
-        budget: Number(form.budget),
-        specifications: form.specifications || undefined,
-        qualityGrade: form.qualityGrade || undefined,
-        additionalNotes: form.additionalNotes || undefined,
-      });
-      setForm(emptyRequirement);
-      setShowForm(false);
-      setTab("requirements");
-      await loadCore();
-      setInfo("Requirement posted. Run AI matching from the AI matching tab or marketplace.");
+      if (editingRequirementId) {
+        await api.updateMyRequirement(editingRequirementId, payload);
+        closeRequirementForm();
+        await loadCore();
+        setInfo(
+          "Requirement updated. Matched suppliers are notified by email when details change.",
+        );
+      } else {
+        await api.createRequirement(profileId, payload);
+        closeRequirementForm();
+        setTab("requirements");
+        await loadCore();
+        setInfo("Requirement posted. Run AI matching from the AI matching tab or marketplace.");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -215,7 +260,7 @@ export default function ClientDashboard() {
                 <button
                   type="button"
                   className="btn btn--primary"
-                  onClick={() => setShowForm((v) => !v)}
+                  onClick={() => (showForm ? closeRequirementForm() : setShowForm(true))}
                 >
                   {showForm ? "Cancel" : "New requirement"}
                 </button>
@@ -297,8 +342,12 @@ export default function ClientDashboard() {
           {tab === "requirements" && (
             <div className="stack stack-lg">
               {showForm && (
-                <form className="card stack fade-in" onSubmit={handleCreate}>
-                  <h2>Post a new requirement (RFQ)</h2>
+                <form className="card stack fade-in" onSubmit={handleRequirementSubmit}>
+                  <h2>
+                    {editingRequirementId
+                      ? "Edit requirement"
+                      : "Post a new requirement (RFQ)"}
+                  </h2>
                   <div className="field">
                     <label htmlFor="companyDisplay">Company / client name</label>
                     <input id="companyDisplay" value={companyName} readOnly disabled />
@@ -418,6 +467,28 @@ export default function ClientDashboard() {
                       </select>
                     </div>
                   </div>
+                  <div className="grid-2">
+                    <div className="field">
+                      <label htmlFor="specifications">Specifications</label>
+                      <textarea
+                        id="specifications"
+                        value={form.specifications}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, specifications: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="qualityGrade">Quality grade</label>
+                      <input
+                        id="qualityGrade"
+                        value={form.qualityGrade}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, qualityGrade: e.target.value }))
+                        }
+                      />
+                    </div>
+                  </div>
                   <div className="field">
                     <label htmlFor="additionalNotes">Additional notes</label>
                     <textarea
@@ -429,7 +500,11 @@ export default function ClientDashboard() {
                     />
                   </div>
                   <button type="submit" className="btn btn--accent" disabled={submitting}>
-                    {submitting ? "Publishing…" : "Publish requirement"}
+                    {submitting
+                      ? "Saving…"
+                      : editingRequirementId
+                        ? "Save changes"
+                        : "Publish requirement"}
                   </button>
                 </form>
               )}
@@ -474,6 +549,13 @@ export default function ClientDashboard() {
                         </p>
                         <div className="divider" />
                         <div className="btn-row">
+                          <button
+                            type="button"
+                            className="btn btn--secondary"
+                            onClick={() => startEditRequirement(req)}
+                          >
+                            Edit
+                          </button>
                           <Link
                             to={`/client/requirements/${id}`}
                             className="btn btn--secondary"

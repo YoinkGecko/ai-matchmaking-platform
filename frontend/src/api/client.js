@@ -113,6 +113,12 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  updateMyRequirement: (requirementId, data) =>
+    request(`/api/clients/me/requirements/${requirementId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
   getOfferings: (supplierId) =>
     request(`/api/suppliers/${supplierId}/offerings`),
 
@@ -138,6 +144,12 @@ export const api = {
       body: form,
     });
   },
+
+  updateMyOffering: (offeringId, data) =>
+    request(`/api/suppliers/me/offerings/${offeringId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
 
   getMatches: (requirementId) =>
     request(`/api/requirements/${requirementId}/matches`),
