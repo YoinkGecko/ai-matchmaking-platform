@@ -24,7 +24,8 @@ export const listMarketplaceOfferings = async () => {
       s.supplier_name,
       s.business_location,
       s.contact_person,
-      s.email AS supplier_email
+      s.email AS supplier_email,
+      s.phone AS supplier_phone
     FROM offerings o
     JOIN suppliers s ON s.id = o.supplier_id
     ORDER BY o.created_at DESC

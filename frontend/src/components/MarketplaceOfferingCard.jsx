@@ -1,5 +1,6 @@
 import { useState } from "react";
 import OfferingPhotoGallery from "./OfferingPhotoGallery";
+import SupplierLocationMap from "./SupplierLocationMap";
 import { formatMoney, pick, titleCase } from "../utils/format";
 
 export default function MarketplaceOfferingCard({
@@ -12,13 +13,21 @@ export default function MarketplaceOfferingCard({
     requirements[0] ? pick(requirements[0], "id", "id") : "",
   );
   const [showMatchPanel, setShowMatchPanel] = useState(false);
+  const [showSupplier, setShowSupplier] = useState(false);
+  const [mapView, setMapView] = useState("business");
 
   const id = pick(offering, "id", "id");
   const product = pick(offering, "productOffered", "product_offered");
   const supplier = pick(offering, "supplierName", "supplier_name");
-  const location =
-    pick(offering, "fulfillmentLocation", "fulfillment_location") ||
-    pick(offering, "businessLocation", "business_location");
+  const contact = pick(offering, "contactPerson", "contact_person");
+  const supplierEmail = pick(offering, "supplierEmail", "supplier_email");
+  const supplierPhone = pick(offering, "supplierPhone", "supplier_phone");
+  const businessLocation = pick(offering, "businessLocation", "business_location");
+  const fulfillmentLocation = pick(
+    offering,
+    "fulfillmentLocation",
+    "fulfillment_location",
+  );
   const qty = pick(offering, "availableQuantity", "available_quantity");
   const unit = pick(offering, "unit", "unit");
   const price = pick(offering, "price", "price");
@@ -27,6 +36,11 @@ export default function MarketplaceOfferingCard({
   const minD = pick(offering, "minimumDeliveryDays", "minimum_delivery_days");
   const maxD = pick(offering, "maximumDeliveryDays", "maximum_delivery_days");
   const isRunning = matchingId === id;
+
+  const mapAddress =
+    mapView === "fulfillment" && fulfillmentLocation
+      ? fulfillmentLocation
+      : businessLocation || fulfillmentLocation;
 
   const handleRunMatch = () => {
     if (!selectedReq) return;
@@ -46,7 +60,7 @@ export default function MarketplaceOfferingCard({
             <h3 className="card__title">{product}</h3>
             <p className="card__meta">
               {supplier}
-              {location ? ` · ${location}` : ""}
+              {fulfillmentLocation ? ` · Ships from ${fulfillmentLocation}` : ""}
             </p>
           </div>
         </div>
@@ -69,6 +83,87 @@ export default function MarketplaceOfferingCard({
         {offering.pricing_notes && (
           <p className="card__meta">{offering.pricing_notes}</p>
         )}
+
+        <div className="marketplace-supplier-panel">
+          <button
+            type="button"
+            className="marketplace-supplier-panel__toggle"
+            onClick={() => setShowSupplier((v) => !v)}
+            aria-expanded={showSupplier}
+          >
+            {showSupplier ? "Hide supplier details" : "Supplier information & map"}
+          </button>
+
+          {showSupplier && (
+            <div className="marketplace-supplier-panel__content stack">
+              <dl className="marketplace-supplier-dl">
+                <div>
+                  <dt>Supplier</dt>
+                  <dd>{supplier || "—"}</dd>
+                </div>
+                <div>
+                  <dt>Contact</dt>
+                  <dd>{contact || "—"}</dd>
+                </div>
+                <div>
+                  <dt>Email</dt>
+                  <dd>
+                    {supplierEmail ? (
+                      <a href={`mailto:${supplierEmail}`}>{supplierEmail}</a>
+                    ) : (
+                      "—"
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Phone</dt>
+                  <dd>{supplierPhone || "—"}</dd>
+                </div>
+                <div>
+                  <dt>Business location</dt>
+                  <dd>{businessLocation || "—"}</dd>
+                </div>
+                <div>
+                  <dt>Fulfillment</dt>
+                  <dd>{fulfillmentLocation || "—"}</dd>
+                </div>
+              </dl>
+
+              {(businessLocation || fulfillmentLocation) && (
+                <div className="stack">
+                  <div className="btn-row">
+                    {businessLocation && (
+                      <button
+                        type="button"
+                        className={`btn btn--secondary ${mapView === "business" ? "btn--map-active" : ""}`}
+                        onClick={() => setMapView("business")}
+                      >
+                        Business on map
+                      </button>
+                    )}
+                    {fulfillmentLocation && (
+                      <button
+                        type="button"
+                        className={`btn btn--secondary ${mapView === "fulfillment" ? "btn--map-active" : ""}`}
+                        onClick={() => setMapView("fulfillment")}
+                      >
+                        Fulfillment on map
+                      </button>
+                    )}
+                  </div>
+                  <SupplierLocationMap
+                    title={
+                      mapView === "fulfillment"
+                        ? "Fulfillment location"
+                        : "Business location"
+                    }
+                    address={mapAddress}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="marketplace-card__actions btn-row">
           <button

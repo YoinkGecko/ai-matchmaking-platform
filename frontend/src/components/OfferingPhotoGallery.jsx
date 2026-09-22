@@ -1,8 +1,30 @@
 import { getOfferingPhotoUrls } from "../utils/offeringPhotos";
 
+function NoImagePlaceholder({ variant }) {
+  if (variant === "drawer") {
+    return (
+      <div className="offering-photos__empty offering-photos__empty--drawer">
+        No image available
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="offering-photos offering-photos--card offering-photos--empty"
+      aria-label="No image available"
+    >
+      <span className="offering-photos__empty-text">No image available</span>
+    </div>
+  );
+}
+
 export default function OfferingPhotoGallery({ record, variant = "card" }) {
   const urls = getOfferingPhotoUrls(record);
-  if (!urls.length) return null;
+
+  if (!urls.length) {
+    return <NoImagePlaceholder variant={variant} />;
+  }
 
   if (variant === "drawer") {
     return (
