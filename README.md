@@ -327,55 +327,6 @@ cd frontend && npm run build && npm run preview
 
 ---
 
-## 5-minute evaluator demo script
-
-Use this when time is limited. **No Ollama required** if demo seed is loaded — matches are pre-built.
-
-| Time     | Who      | Action                                                                     | What to say                                                                                    |
-| -------- | -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| **0:00** | —        | Open http://localhost:5173                                                 | “Wisdom Match connects B2B buyers and suppliers with hybrid AI matching.”                      |
-| **0:30** | Client   | Log in → `demo.client@wisdommatch.demo` (OTP from Redis or email worker)   | “Passwordless OTP; profile links to company RFQs.”                                             |
-| **1:00** | Client   | **Your requirements** → open **Basmati rice** (MATCHED) → **View matches** | “Six suppliers ranked by composite score — not keyword search.”                                |
-| **1:30** | Client   | Click top match → **Match detail drawer**                                  | “Semantic score, LLM product decision, budget & delivery breakdown, and written explanations.” |
-| **2:00** | Client   | Point at **REJECTED 0%** card (steel vs rice)                              | “Hard reject — wrong product class despite maybe similar embedding noise.”                     |
-| **2:30** | Client   | **Place order** on a strong match (optional)                               | “Closes the loop from match to procurement.”                                                   |
-| **3:00** | Supplier | Log in → `apex.grain@wisdommatch.demo`                                     | “Suppliers see the same match from their side.”                                                |
-| **3:30** | Supplier | **Order requests** → accept/decline; **Messages** if time                  | “Negotiation + email notifications.”                                                           |
-| **4:00** | Client   | **Marketplace** tab — chat on an offering                                  | “Discovery beyond pure RFQ matching.”                                                          |
-| **4:30** | Admin    | `admin@wisdommatch.demo` → **Moderation** / overview                       | “Ops: reports, warnings, suspend accounts.”                                                    |
-| **5:00** | —        | Mention `docs/TUTORIAL_DEMO.md` + README AI section                        | “Live re-match needs Ollama; seed proves full score matrix.”                                   |
-
-### OTP without email (local)
-
-```bash
-redis-cli GET "otp:demo.client@wisdommatch.demo"
-```
-
-### Optional 30-second “live AI” punch
-
-Client → **turmeric** requirement (OPEN) → **Run AI** → refresh matches. Requires Ollama running; emails enqueue if worker is up.
-
----
-
-## Extended demo (15 min)
-
-See **[docs/TUTORIAL_DEMO.md](docs/TUTORIAL_DEMO.md)** for the full walkthrough: every match archetype (partial qty, over budget, quote required, related product, 0% reject), settings, admin tables, and reset via `npm run seed:demo`.
-
-### Demo accounts (after `seed:demo`)
-
-| Role                       | Email                              |
-| -------------------------- | ---------------------------------- |
-| Client                     | `demo.client@wisdommatch.demo`     |
-| Admin                      | `admin@wisdommatch.demo`           |
-| Supplier (best match)      | `apex.grain@wisdommatch.demo`      |
-| Supplier (partial qty)     | `partial.mills@wisdommatch.demo`   |
-| Supplier (related product) | `coastal.staples@wisdommatch.demo` |
-| Supplier (over budget)     | `premium.imports@wisdommatch.demo` |
-| Supplier (quote required)  | `quote.coop@wisdommatch.demo`      |
-| Supplier (reject / 0%)     | `forge.metals@wisdommatch.demo`    |
-
----
-
 ## Environment variables
 
 ### `backend/.env`
