@@ -31,6 +31,18 @@ function shortId(id) {
   return `${String(id).slice(0, 8)}…`;
 }
 
+function clipCell(value, wide = false) {
+  const text = value || "—";
+  return (
+    <span
+      className={`data-table__clip ${wide ? "data-table__clip--wide" : ""}`.trim()}
+      title={text === "—" ? undefined : String(text)}
+    >
+      {text}
+    </span>
+  );
+}
+
 export default function AdminDashboard() {
   const [tab, setTab] = useState("overview");
   const [loading, setLoading] = useState(true);
@@ -284,10 +296,26 @@ export default function AdminDashboard() {
               {tab === "orders" && (
                 <AdminDataTable
                   columns={[
-                    { key: "company_name", label: "Client" },
-                    { key: "client_email", label: "Client email" },
-                    { key: "supplier_name", label: "Supplier" },
-                    { key: "product_offered", label: "Product" },
+                    {
+                      key: "company_name",
+                      label: "Client",
+                      render: (r) => clipCell(r.company_name),
+                    },
+                    {
+                      key: "client_email",
+                      label: "Client email",
+                      render: (r) => clipCell(r.client_email, true),
+                    },
+                    {
+                      key: "supplier_name",
+                      label: "Supplier",
+                      render: (r) => clipCell(r.supplier_name),
+                    },
+                    {
+                      key: "product_offered",
+                      label: "Product",
+                      render: (r) => clipCell(r.product_offered, true),
+                    },
                     {
                       key: "quantity_ordered",
                       label: "Qty",
@@ -300,20 +328,24 @@ export default function AdminDashboard() {
                     },
                     {
                       key: "status",
-                      label: "Supplier response",
+                      label: "Response",
                       render: (r) => orderStatusBadge(r.status),
                     },
                     {
                       key: "client_notes",
                       label: "Client notes",
-                      render: (r) => r.client_notes || "—",
+                      render: (r) => clipCell(r.client_notes, true),
                     },
                     {
                       key: "supplier_response_notes",
                       label: "Supplier notes",
-                      render: (r) => r.supplier_response_notes || "—",
+                      render: (r) => clipCell(r.supplier_response_notes, true),
                     },
-                    { key: "delivery_location", label: "Deliver to" },
+                    {
+                      key: "delivery_location",
+                      label: "Deliver to",
+                      render: (r) => clipCell(r.delivery_location),
+                    },
                     {
                       key: "created_at",
                       label: "Placed",
