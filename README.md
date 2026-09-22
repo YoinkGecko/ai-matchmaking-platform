@@ -30,11 +30,11 @@ Built for the **Wisdom Group AI Intern** evaluation — functional product, not 
 
 ## What this platform does
 
-| Actor | Capabilities |
-|--------|----------------|
-| **Client** | Register profile, post/edit requirements, run AI matching, view ranked suppliers with scores and explanations, browse marketplace, chat with suppliers, place orders |
-| **Supplier** | Register profile, publish/edit offerings (with photos), view AI match feed, respond to orders, chat with clients |
-| **Admin** | Platform overview, users/clients/suppliers/catalog, matches & orders, **chat moderation** (reports, warnings, suspend/activate accounts) |
+| Actor        | Capabilities                                                                                                                                                         |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Client**   | Register profile, post/edit requirements, run AI matching, view ranked suppliers with scores and explanations, browse marketplace, chat with suppliers, place orders |
+| **Supplier** | Register profile, publish/edit offerings (with photos), view AI match feed, respond to orders, chat with clients                                                     |
+| **Admin**    | Platform overview, users/clients/suppliers/catalog, matches & orders, **chat moderation** (reports, warnings, suspend/activate accounts)                             |
 
 **Auth:** Email OTP (JWT). Profiles are linked after first login.
 
@@ -44,17 +44,20 @@ Built for the **Wisdom Group AI Intern** evaluation — functional product, not 
 
 ## Rubric coverage
 
-| Requirement | Implementation |
-|-------------|----------------|
-| Client portal form | Company name (profile), product, category, quantity, budget, delivery location, timeline, notes (+ specs on edit) — `ClientDashboard` |
-| Supplier portal form | Supplier name (profile), product, category, quantity, pricing, location, delivery window, notes, photos — `SupplierDashboard` |
-| AI matching (not keyword-only) | pgvector semantic retrieval + LLM product fit + quantity/budget/delivery scoring → composite % stored in `matches` |
-| Notifications | Email queue on match run, orders, chat, catalog changes (BullMQ + worker) |
-| Dashboard | Client/supplier hubs + match detail drawer with status/score; admin console |
+| Requirement                    | Implementation                                                                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Client portal form             | Company name (profile), product, category, quantity, budget, delivery location, timeline, notes (+ specs on edit) — `ClientDashboard` |
+| Supplier portal form           | Supplier name (profile), product, category, quantity, pricing, location, delivery window, notes, photos — `SupplierDashboard`         |
+| AI matching (not keyword-only) | pgvector semantic retrieval + LLM product fit + quantity/budget/delivery scoring → composite % stored in `matches`                    |
+| Notifications                  | Email queue on match run, orders, chat, catalog changes (BullMQ + worker)                                                             |
+| Dashboard                      | Client/supplier hubs + match detail drawer with status/score; admin console                                                           |
 
 ---
 
 ## Architecture
+
+For a more detailed architecture diagram, view the [Architecture Diagram](./architecture.png).
+![Architecture Diagram](./architecture.png)
 
 High-level view of how requests, data, AI, and async email flow together.
 
@@ -112,14 +115,14 @@ flowchart TB
 
 ### Layer responsibilities
 
-| Layer | Responsibility |
-|--------|----------------|
-| `frontend/` | UX, dashboards, match visualization, marketplace, chat UI |
-| `backend/src/routes` | HTTP surface, auth guards, validation |
-| `backend/src/services` | Domain logic, matching, notifications, moderation |
-| `backend/src/db` | SQL schemas; `pg` connection pool |
-| `notification/` | Email worker (decoupled from API process) |
-| Ollama | Embeddings at create/update; LLM for ambiguous product pairs |
+| Layer                  | Responsibility                                               |
+| ---------------------- | ------------------------------------------------------------ |
+| `frontend/`            | UX, dashboards, match visualization, marketplace, chat UI    |
+| `backend/src/routes`   | HTTP surface, auth guards, validation                        |
+| `backend/src/services` | Domain logic, matching, notifications, moderation            |
+| `backend/src/db`       | SQL schemas; `pg` connection pool                            |
+| `notification/`        | Email worker (decoupled from API process)                    |
+| Ollama                 | Embeddings at create/update; LLM for ambiguous product pairs |
 
 ---
 
@@ -133,7 +136,7 @@ Matching is **multi-stage**. It is deliberately **not** a single keyword or full
 - Vectors are stored in PostgreSQL with **pgvector**.
 - When matching runs, the engine loads the requirement embedding and selects the **top-K offerings** by vector distance (`matching.service.ts`).
 
-This finds *semantically nearby* catalog items before expensive LLM calls.
+This finds _semantically nearby_ catalog items before expensive LLM calls.
 
 ### Stage 2 — Fast product gate (rules + signals)
 
@@ -149,20 +152,20 @@ This finds *semantically nearby* catalog items before expensive LLM calls.
 
 ### Stage 4 — Business constraints
 
-| Signal | Service | Output |
-|--------|---------|--------|
-| Quantity | `quantity-matching.service.ts` | Coverage ratio (partial fulfillment supported) |
-| Budget | `budget-matching.service.ts` | `WITHIN_BUDGET` / `OVER_BUDGET` / `QUOTE_REQUIRED` |
+| Signal   | Service                        | Output                                               |
+| -------- | ------------------------------ | ---------------------------------------------------- |
+| Quantity | `quantity-matching.service.ts` | Coverage ratio (partial fulfillment supported)       |
+| Budget   | `budget-matching.service.ts`   | `WITHIN_BUDGET` / `OVER_BUDGET` / `QUOTE_REQUIRED`   |
 | Delivery | `delivery-matching.service.ts` | `ON_TIME` / `LATE` / `UNCERTAIN` vs required-by date |
 
 ### Stage 5 — Composite score
 
 Weighted blend in `match-score.service.ts`:
 
-- **40%** semantic similarity  
-- **20%** quantity coverage  
-- **20%** budget fit  
-- **20%** delivery fit  
+- **40%** semantic similarity
+- **20%** quantity coverage
+- **20%** budget fit
+- **20%** delivery fit
 
 Hard rejects (`INCOMPATIBLE`, `CLEAR_REJECT`) → **0%**.
 
@@ -179,15 +182,15 @@ Results are **persisted** in `matches` (score, percentage, statuses, AI explanat
 
 ## Technology stack
 
-| Area | Choices |
-|------|---------|
-| Frontend | React 19, Vite 8, React Router 7, Framer Motion, CSS design system |
-| Backend | Node.js, Express 5, TypeScript, `pg`, Multer (offering photos) |
-| Database | PostgreSQL + **pgvector** (768-d embeddings) |
-| Cache / queue | Redis, BullMQ |
-| AI (local) | [Ollama](https://ollama.com) — `nomic-embed-text`, `llama3.2` |
-| Email | Nodemailer + HTML templates (`notification/wisdom-email-html.js`) |
-| Auth | OTP in Redis, JWT (`Bearer`) |
+| Area          | Choices                                                            |
+| ------------- | ------------------------------------------------------------------ |
+| Frontend      | React 19, Vite 8, React Router 7, Framer Motion, CSS design system |
+| Backend       | Node.js, Express 5, TypeScript, `pg`, Multer (offering photos)     |
+| Database      | PostgreSQL + **pgvector** (768-d embeddings)                       |
+| Cache / queue | Redis, BullMQ                                                      |
+| AI (local)    | [Ollama](https://ollama.com) — `nomic-embed-text`, `llama3.2`      |
+| Email         | Nodemailer + HTML templates (`notification/wisdom-email-html.js`)  |
+| Auth          | OTP in Redis, JWT (`Bearer`)                                       |
 
 ---
 
@@ -225,14 +228,14 @@ ai-matchmaking-platform/
 
 Install before setup:
 
-| Tool | Purpose |
-|------|---------|
-| **Node.js** 20+ | Backend & frontend |
-| **PostgreSQL** 15+ | Primary datastore |
-| **pgvector** extension | `CREATE EXTENSION vector;` in your DB |
-| **Redis** | OTP storage + BullMQ |
-| **Ollama** (optional for *live* matching) | Embeddings + LLM; demo seed works without re-running match |
-| **SMTP** (optional) | Real emails; OTP can be read from Redis for local demo |
+| Tool                                      | Purpose                                                    |
+| ----------------------------------------- | ---------------------------------------------------------- |
+| **Node.js** 20+                           | Backend & frontend                                         |
+| **PostgreSQL** 15+                        | Primary datastore                                          |
+| **pgvector** extension                    | `CREATE EXTENSION vector;` in your DB                      |
+| **Redis**                                 | OTP storage + BullMQ                                       |
+| **Ollama** (optional for _live_ matching) | Embeddings + LLM; demo seed works without re-running match |
+| **SMTP** (optional)                       | Real emails; OTP can be read from Redis for local demo     |
 
 Pull Ollama models once:
 
@@ -309,12 +312,12 @@ In `notification/`, ensure `.env` has `EMAIL_PASS` / SMTP settings consistent wi
 
 Use **four terminals** for a full experience (API, UI, worker, Ollama).
 
-| Terminal | Command | URL / notes |
-|----------|---------|-------------|
-| 1 — API | `cd backend && npm run dev` | http://localhost:5001 — `/health` |
-| 2 — UI | `cd frontend && npm run dev` | http://localhost:5173 (proxies `/api` → 5001) |
-| 3 — Email worker | `cd notification && node worker.js` | Consumes `email-queue` |
-| 4 — Ollama | `ollama serve` | http://localhost:11434 |
+| Terminal         | Command                             | URL / notes                                   |
+| ---------------- | ----------------------------------- | --------------------------------------------- |
+| 1 — API          | `cd backend && npm run dev`         | http://localhost:5001 — `/health`             |
+| 2 — UI           | `cd frontend && npm run dev`        | http://localhost:5173 (proxies `/api` → 5001) |
+| 3 — Email worker | `cd notification && node worker.js` | Consumes `email-queue`                        |
+| 4 — Ollama       | `ollama serve`                      | http://localhost:11434                        |
 
 **Production-style build:**
 
@@ -329,19 +332,19 @@ cd frontend && npm run build && npm run preview
 
 Use this when time is limited. **No Ollama required** if demo seed is loaded — matches are pre-built.
 
-| Time | Who | Action | What to say |
-|------|-----|--------|-------------|
-| **0:00** | — | Open http://localhost:5173 | “Wisdom Match connects B2B buyers and suppliers with hybrid AI matching.” |
-| **0:30** | Client | Log in → `demo.client@wisdommatch.demo` (OTP from Redis or email worker) | “Passwordless OTP; profile links to company RFQs.” |
-| **1:00** | Client | **Your requirements** → open **Basmati rice** (MATCHED) → **View matches** | “Six suppliers ranked by composite score — not keyword search.” |
-| **1:30** | Client | Click top match → **Match detail drawer** | “Semantic score, LLM product decision, budget & delivery breakdown, and written explanations.” |
-| **2:00** | Client | Point at **REJECTED 0%** card (steel vs rice) | “Hard reject — wrong product class despite maybe similar embedding noise.” |
-| **2:30** | Client | **Place order** on a strong match (optional) | “Closes the loop from match to procurement.” |
-| **3:00** | Supplier | Log in → `apex.grain@wisdommatch.demo` | “Suppliers see the same match from their side.” |
-| **3:30** | Supplier | **Order requests** → accept/decline; **Messages** if time | “Negotiation + email notifications.” |
-| **4:00** | Client | **Marketplace** tab — chat on an offering | “Discovery beyond pure RFQ matching.” |
-| **4:30** | Admin | `admin@wisdommatch.demo` → **Moderation** / overview | “Ops: reports, warnings, suspend accounts.” |
-| **5:00** | — | Mention `docs/TUTORIAL_DEMO.md` + README AI section | “Live re-match needs Ollama; seed proves full score matrix.” |
+| Time     | Who      | Action                                                                     | What to say                                                                                    |
+| -------- | -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **0:00** | —        | Open http://localhost:5173                                                 | “Wisdom Match connects B2B buyers and suppliers with hybrid AI matching.”                      |
+| **0:30** | Client   | Log in → `demo.client@wisdommatch.demo` (OTP from Redis or email worker)   | “Passwordless OTP; profile links to company RFQs.”                                             |
+| **1:00** | Client   | **Your requirements** → open **Basmati rice** (MATCHED) → **View matches** | “Six suppliers ranked by composite score — not keyword search.”                                |
+| **1:30** | Client   | Click top match → **Match detail drawer**                                  | “Semantic score, LLM product decision, budget & delivery breakdown, and written explanations.” |
+| **2:00** | Client   | Point at **REJECTED 0%** card (steel vs rice)                              | “Hard reject — wrong product class despite maybe similar embedding noise.”                     |
+| **2:30** | Client   | **Place order** on a strong match (optional)                               | “Closes the loop from match to procurement.”                                                   |
+| **3:00** | Supplier | Log in → `apex.grain@wisdommatch.demo`                                     | “Suppliers see the same match from their side.”                                                |
+| **3:30** | Supplier | **Order requests** → accept/decline; **Messages** if time                  | “Negotiation + email notifications.”                                                           |
+| **4:00** | Client   | **Marketplace** tab — chat on an offering                                  | “Discovery beyond pure RFQ matching.”                                                          |
+| **4:30** | Admin    | `admin@wisdommatch.demo` → **Moderation** / overview                       | “Ops: reports, warnings, suspend accounts.”                                                    |
+| **5:00** | —        | Mention `docs/TUTORIAL_DEMO.md` + README AI section                        | “Live re-match needs Ollama; seed proves full score matrix.”                                   |
 
 ### OTP without email (local)
 
@@ -361,16 +364,16 @@ See **[docs/TUTORIAL_DEMO.md](docs/TUTORIAL_DEMO.md)** for the full walkthrough:
 
 ### Demo accounts (after `seed:demo`)
 
-| Role | Email |
-|------|--------|
-| Client | `demo.client@wisdommatch.demo` |
-| Admin | `admin@wisdommatch.demo` |
-| Supplier (best match) | `apex.grain@wisdommatch.demo` |
-| Supplier (partial qty) | `partial.mills@wisdommatch.demo` |
+| Role                       | Email                              |
+| -------------------------- | ---------------------------------- |
+| Client                     | `demo.client@wisdommatch.demo`     |
+| Admin                      | `admin@wisdommatch.demo`           |
+| Supplier (best match)      | `apex.grain@wisdommatch.demo`      |
+| Supplier (partial qty)     | `partial.mills@wisdommatch.demo`   |
 | Supplier (related product) | `coastal.staples@wisdommatch.demo` |
-| Supplier (over budget) | `premium.imports@wisdommatch.demo` |
-| Supplier (quote required) | `quote.coop@wisdommatch.demo` |
-| Supplier (reject / 0%) | `forge.metals@wisdommatch.demo` |
+| Supplier (over budget)     | `premium.imports@wisdommatch.demo` |
+| Supplier (quote required)  | `quote.coop@wisdommatch.demo`      |
+| Supplier (reject / 0%)     | `forge.metals@wisdommatch.demo`    |
 
 ---
 
@@ -378,17 +381,17 @@ See **[docs/TUTORIAL_DEMO.md](docs/TUTORIAL_DEMO.md)** for the full walkthrough:
 
 ### `backend/.env`
 
-| Variable | Description |
-|----------|-------------|
-| `PORT` | API port (default `5001`) |
-| `JWT_SECRET` | Sign JWTs after OTP verify |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | PostgreSQL |
-| `ADMIN_EMAILS` | Comma-separated emails allowed to log in as **ADMIN** |
+| Variable                                                  | Description                                           |
+| --------------------------------------------------------- | ----------------------------------------------------- |
+| `PORT`                                                    | API port (default `5001`)                             |
+| `JWT_SECRET`                                              | Sign JWTs after OTP verify                            |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | PostgreSQL                                            |
+| `ADMIN_EMAILS`                                            | Comma-separated emails allowed to log in as **ADMIN** |
 
 ### `frontend/.env`
 
-| Variable | Description |
-|----------|-------------|
+| Variable       | Description                                    |
+| -------------- | ---------------------------------------------- |
 | `VITE_API_URL` | Optional; leave empty in dev to use Vite proxy |
 
 ### Notification worker
@@ -399,14 +402,14 @@ Configure SMTP in `notification/` (see worker and `EMAIL_PASS`). Redis defaults:
 
 ## Notifications & background jobs
 
-| Event | Queue job | Recipients |
-|-------|-----------|------------|
-| OTP login | `send-otp` | User |
-| Match run | `send-match-notification` | Client + matched suppliers |
-| Chat message | `send-chat-notification` | Counterparty |
-| Order placed / status | order notification jobs | Client + supplier |
-| RFQ/offering edit | `send-catalog-change-notification` | Matched / chatting parties |
-| Admin warning | `send-moderation-warning` | Warned user |
+| Event                 | Queue job                          | Recipients                 |
+| --------------------- | ---------------------------------- | -------------------------- |
+| OTP login             | `send-otp`                         | User                       |
+| Match run             | `send-match-notification`          | Client + matched suppliers |
+| Chat message          | `send-chat-notification`           | Counterparty               |
+| Order placed / status | order notification jobs            | Client + supplier          |
+| RFQ/offering edit     | `send-catalog-change-notification` | Matched / chatting parties |
+| Admin warning         | `send-moderation-warning`          | Warned user                |
 
 The API process stays fast by **enqueue-only**; run `notification/worker.js` alongside the API.
 
@@ -416,16 +419,16 @@ The API process stays fast by **enqueue-only**; run `notification/worker.js` alo
 
 Base URL: `http://localhost:5001/api` (or proxied via Vite).
 
-| Area | Examples |
-|------|----------|
-| Auth | `POST /auth/request-otp`, `POST /auth/verify-otp`, `GET /auth/me` |
-| Client | `POST /clients`, `GET/PATCH /clients/me/profile`, requirements CRUD |
-| Supplier | `POST /suppliers`, offerings CRUD, `PATCH /suppliers/me/offerings/:id` |
-| Matching | `POST /requirements/:id/match`, `GET /requirements/:id/matches` |
-| Orders | `POST .../orders`, supplier respond |
-| Chat | `GET/POST /chats/...`, `POST /chats/messages/:id/report` |
-| Marketplace | `GET /marketplace/offerings` (client) |
-| Admin | `/admin/overview`, users, reports, warnings, user status |
+| Area        | Examples                                                               |
+| ----------- | ---------------------------------------------------------------------- |
+| Auth        | `POST /auth/request-otp`, `POST /auth/verify-otp`, `GET /auth/me`      |
+| Client      | `POST /clients`, `GET/PATCH /clients/me/profile`, requirements CRUD    |
+| Supplier    | `POST /suppliers`, offerings CRUD, `PATCH /suppliers/me/offerings/:id` |
+| Matching    | `POST /requirements/:id/match`, `GET /requirements/:id/matches`        |
+| Orders      | `POST .../orders`, supplier respond                                    |
+| Chat        | `GET/POST /chats/...`, `POST /chats/messages/:id/report`               |
+| Marketplace | `GET /marketplace/offerings` (client)                                  |
+| Admin       | `/admin/overview`, users, reports, warnings, user status               |
 
 Authenticated routes expect `Authorization: Bearer <jwt>`.
 
@@ -433,14 +436,14 @@ Authenticated routes expect `Authorization: Bearer <jwt>`.
 
 ## Scalability & extension points
 
-| Direction | How the codebase supports it |
-|-----------|-------------------------------|
-| **More traffic** | Stateless API behind a load balancer; connection pool already centralized |
-| **Heavier matching** | Move `runMatching` to a BullMQ worker; cache embeddings; tune top-K |
-| **Better recall** | HNSW index on pgvector; hybrid sparse+dense retrieval |
-| **Learning loop** | `matches` table + future client feedback on cards → re-rank training data |
-| **Multi-tenant** | Add `org_id` to clients/suppliers; scope queries in services |
-| **Managed AI** | Swap `embedding.service.ts` / `ai-evaluator.service.ts` URLs for OpenAI, Vertex, etc., keeping the same pipeline stages |
+| Direction            | How the codebase supports it                                                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **More traffic**     | Stateless API behind a load balancer; connection pool already centralized                                               |
+| **Heavier matching** | Move `runMatching` to a BullMQ worker; cache embeddings; tune top-K                                                     |
+| **Better recall**    | HNSW index on pgvector; hybrid sparse+dense retrieval                                                                   |
+| **Learning loop**    | `matches` table + future client feedback on cards → re-rank training data                                               |
+| **Multi-tenant**     | Add `org_id` to clients/suppliers; scope queries in services                                                            |
+| **Managed AI**       | Swap `embedding.service.ts` / `ai-evaluator.service.ts` URLs for OpenAI, Vertex, etc., keeping the same pipeline stages |
 
 ---
 
@@ -459,19 +462,19 @@ npx tsx src/test/match-score.test.ts
 
 ## Further reading
 
-- **[docs/TUTORIAL_DEMO.md](docs/TUTORIAL_DEMO.md)** — Full demo script and match matrix table  
-- **GitHub:** https://github.com/YoinkGecko/ai-matchmaking-platform  
+- **[docs/TUTORIAL_DEMO.md](docs/TUTORIAL_DEMO.md)** — Full demo script and match matrix table
+- **GitHub:** https://github.com/YoinkGecko/ai-matchmaking-platform
 
 ---
 
 ## Submission checklist (Wisdom Group)
 
-- [ ] PostgreSQL + pgvector + Redis running  
-- [ ] `npm run seed:demo` and `ADMIN_EMAILS` set  
-- [ ] API + frontend + email worker started  
-- [ ] Walk through [5-minute evaluator demo script](#5-minute-evaluator-demo-script) once  
+- [ ] PostgreSQL + pgvector + Redis running
+- [ ] `npm run seed:demo` and `ADMIN_EMAILS` set
+- [ ] API + frontend + email worker started
+- [ ] Walk through [5-minute evaluator demo script](#5-minute-evaluator-demo-script) once
 - [ ] Repository link shared before **Thursday, 24 September 2026, 4:00 PM**
 
 ---
 
-*Wisdom Match — thoughtful AI for B2B supplier discovery.*
+_Wisdom Match — thoughtful AI for B2B supplier discovery._
