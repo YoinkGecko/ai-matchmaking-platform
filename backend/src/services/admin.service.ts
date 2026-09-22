@@ -17,7 +17,7 @@ export const getOverview = async () => {
 
 export const listUsers = async () => {
   const result = await pool.query(`
-    SELECT id, email, role, created_at, updated_at
+    SELECT id, email, role, account_status, created_at, updated_at
     FROM users
     ORDER BY created_at DESC
   `);

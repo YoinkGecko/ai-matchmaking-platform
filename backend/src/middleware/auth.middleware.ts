@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { getAccountStatus } from "../services/account-status.service";
 
 export type UserRole = "CLIENT" | "SUPPLIER" | "ADMIN";
 
@@ -9,7 +10,7 @@ export interface AuthPayload {
   role: UserRole;
 }
 
-export function authenticate(req: Request, res: Response, next: NextFunction) {
+export async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
 
@@ -28,6 +29,14 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload;
+
+    const accountStatus = await getAccountStatus(decoded.email, decoded.role);
+    if (accountStatus === "SUSPENDED") {
+      return res.status(403).json({
+        message:
+          "Your account is suspended. Contact Wisdom Match support if you believe this is a mistake.",
+      });
+    }
 
     res.locals.user = decoded;
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
 import AdminDataTable from "../components/AdminDataTable";
+import AdminModerationPanel from "../components/AdminModerationPanel";
 import FadeIn from "../components/FadeIn";
 import { formatDate, formatMoney, titleCase } from "../utils/format";
 
@@ -13,6 +14,7 @@ const TABS = [
   { id: "offerings", label: "Offerings" },
   { id: "matches", label: "Matches" },
   { id: "orders", label: "Orders" },
+  { id: "moderation", label: "Moderation" },
 ];
 
 function orderStatusBadge(status) {
@@ -101,6 +103,11 @@ export default function AdminDashboard() {
           setOrders(res.data);
           break;
         }
+        case "moderation": {
+          const usersRes = await api.adminUsers();
+          setUsers(usersRes.data || []);
+          break;
+        }
         default:
           break;
       }
@@ -144,7 +151,7 @@ export default function AdminDashboard() {
         <div className="admin-content stack">
           {error && <div className="alert alert--error">{error}</div>}
 
-          {loading ? (
+          {loading && tab !== "moderation" ? (
             <div className="loading-block">
               <span className="spinner" aria-hidden="true" />
               Loading {tab}…
@@ -171,10 +178,25 @@ export default function AdminDashboard() {
                   columns={[
                     { key: "email", label: "Email" },
                     { key: "role", label: "Role", render: (r) => titleCase(r.role) },
+                    {
+                      key: "account_status",
+                      label: "Status",
+                      render: (r) => titleCase(r.account_status || "ACTIVE"),
+                    },
                     { key: "created_at", label: "Joined", render: (r) => formatDate(r.created_at) },
                     { key: "id", label: "ID", render: (r) => shortId(r.id) },
                   ]}
                   rows={users}
+                />
+              )}
+
+              {tab === "moderation" && (
+                <AdminModerationPanel
+                  users={users}
+                  onUsersRefresh={async () => {
+                    const usersRes = await api.adminUsers();
+                    setUsers(usersRes.data || []);
+                  }}
                 />
               )}
 

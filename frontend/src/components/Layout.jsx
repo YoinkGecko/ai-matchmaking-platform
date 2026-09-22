@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { dashboardPathForRole } from "../utils/routes";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Layout({ children }) {
   const { user, isAuthenticated, logout } = useAuth();
@@ -27,7 +28,8 @@ export default function Layout({ children }) {
             <span className="setby-logo__mark" aria-hidden="true" />
             <span>Wisdom Match</span>
           </Link>
-          <nav className="btn-row">
+          <nav className="btn-row app-header__actions">
+            <ThemeToggle className="theme-toggle--header" />
             {isAuthenticated ? (
               <>
                 <span className="header-meta">

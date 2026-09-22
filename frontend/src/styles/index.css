@@ -2288,3 +2288,172 @@ h1 {
     gap: 0.15rem;
   }
 }
+
+/* —— Theme toggle —— */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--gray-400);
+}
+
+.theme-toggle__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.theme-toggle--header,
+.theme-toggle--nav {
+  flex-shrink: 0;
+}
+
+.app-header__actions {
+  align-items: center;
+}
+
+/* —— Dark mode (manual toggle) —— */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --black: #f5f5f5;
+  --white: #141414;
+  --gray-50: #0f0f0f;
+  --gray-100: #1a1a1a;
+  --gray-400: #737373;
+  --gray-600: #a3a3a3;
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --text: #f5f5f5;
+  --text-muted: #a3a3a3;
+  --border: #2e2e2e;
+  --primary: #f5f5f5;
+  --primary-hover: #e5e5e5;
+  --accent-soft: rgba(255, 92, 40, 0.12);
+  --success-soft: rgba(5, 150, 105, 0.15);
+  --warning-soft: rgba(217, 119, 6, 0.15);
+  --danger-soft: rgba(220, 38, 38, 0.15);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.55);
+}
+
+html[data-theme="dark"] body {
+  background: var(--gray-50);
+  color: var(--text);
+}
+
+html[data-theme="dark"] .setby-nav--scrolled,
+html[data-theme="dark"] .app-header--product {
+  background: rgba(20, 20, 20, 0.92);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .setby-btn--dark {
+  background: var(--orange);
+  color: #fff;
+}
+
+html[data-theme="dark"] .setby-btn--outline {
+  color: var(--text);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .chat-panel__sheet,
+html[data-theme="dark"] .marketplace-card {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+html[data-theme="dark"] .chat-bubble--mine {
+  background: rgba(255, 92, 40, 0.2);
+  color: var(--text);
+}
+
+html[data-theme="dark"] .chat-bubble--theirs {
+  background: var(--gray-100);
+  color: var(--text);
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background: var(--gray-100);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .settings-form input:disabled {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+/* —— Chat report —— */
+.chat-bubble__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.chat-bubble__report {
+  border: none;
+  background: transparent;
+  color: var(--danger);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chat-bubble__report:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* —— Moderation —— */
+.moderation-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.moderation-card__quote {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--orange);
+  background: var(--accent-soft);
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.moderation-card__warn-form {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.btn--ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.btn--ghost:hover {
+  border-color: var(--gray-400);
+  color: var(--text);
+}

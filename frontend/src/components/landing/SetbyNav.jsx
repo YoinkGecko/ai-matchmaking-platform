@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { dashboardPathForRole } from "../../utils/routes";
+import ThemeToggle from "../ThemeToggle";
 
 const LINKS = [
   { href: "#about", label: "About" },
@@ -56,6 +57,7 @@ export default function SetbyNav({ inverted = false }) {
         </nav>
 
         <div className="setby-nav__actions">
+          <ThemeToggle className="theme-toggle--nav" />
           {isAuthenticated ? (
             <Link to={dashboardPathForRole(user.role)} className="setby-btn setby-btn--dark">
               Dashboard

@@ -10,6 +10,12 @@ import {
   adminSuppliersController,
   adminUsersController,
 } from "../controllers/admin.controller";
+import {
+  adminDismissReportController,
+  adminListReportsController,
+  adminSendWarningController,
+  adminSetUserStatusController,
+} from "../controllers/moderation.controller";
 
 const router = Router();
 
@@ -23,5 +29,9 @@ router.get("/requirements", adminRequirementsController);
 router.get("/offerings", adminOfferingsController);
 router.get("/matches", adminMatchesController);
 router.get("/orders", adminOrdersController);
+router.get("/reports", adminListReportsController);
+router.post("/warnings", adminSendWarningController);
+router.patch("/reports/:reportId/dismiss", adminDismissReportController);
+router.patch("/users/:userId/status", adminSetUserStatusController);
 
 export default router;

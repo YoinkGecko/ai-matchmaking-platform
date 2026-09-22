@@ -107,6 +107,12 @@ export const api = {
       body: JSON.stringify({ message }),
     }),
 
+  reportChatMessage: (messageId, reason = "") =>
+    request(`/api/chats/messages/${messageId}/report`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }),
+
   createRequirement: (clientId, data) =>
     request(`/api/clients/${clientId}/requirements`, {
       method: "POST",
@@ -187,4 +193,18 @@ export const api = {
   adminOfferings: () => request("/api/admin/offerings"),
   adminMatches: () => request("/api/admin/matches"),
   adminOrders: () => request("/api/admin/orders"),
+  adminReports: (status) =>
+    request(`/api/admin/reports${status ? `?status=${encodeURIComponent(status)}` : ""}`),
+  adminSendWarning: (data) =>
+    request("/api/admin/warnings", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  adminDismissReport: (reportId) =>
+    request(`/api/admin/reports/${reportId}/dismiss`, { method: "PATCH" }),
+  adminSetUserStatus: (userId, status) =>
+    request(`/api/admin/users/${userId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
 };

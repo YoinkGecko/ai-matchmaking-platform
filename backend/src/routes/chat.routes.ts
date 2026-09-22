@@ -7,6 +7,7 @@ import {
   postConversationMessageController,
   postOfferingChatMessageController,
 } from "../controllers/chat.controller";
+import { reportChatMessageController } from "../controllers/moderation.controller";
 import { authenticate, requireRole } from "../middleware/auth.middleware";
 
 const router = Router();
@@ -49,6 +50,12 @@ router.post(
   "/conversations/:conversationId/messages",
   authenticate,
   postConversationMessageController,
+);
+
+router.post(
+  "/messages/:messageId/report",
+  authenticate,
+  reportChatMessageController,
 );
 
 export default router;

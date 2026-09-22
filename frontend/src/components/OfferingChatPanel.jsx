@@ -3,15 +3,27 @@ import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { formatDate, pick } from "../utils/format";
 
-function ChatBubble({ message, isMine }) {
+function ChatBubble({ message, isMine, onReport, reporting }) {
   return (
     <div
       className={`chat-bubble ${isMine ? "chat-bubble--mine" : "chat-bubble--theirs"}`}
     >
       <p className="chat-bubble__body">{message.body}</p>
-      <time className="chat-bubble__time" dateTime={message.created_at}>
-        {formatDate(message.created_at)}
-      </time>
+      <div className="chat-bubble__footer">
+        <time className="chat-bubble__time" dateTime={message.created_at}>
+          {formatDate(message.created_at)}
+        </time>
+        {!isMine && onReport && (
+          <button
+            type="button"
+            className="chat-bubble__report"
+            disabled={reporting}
+            onClick={() => onReport(message)}
+          >
+            Report
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -31,6 +43,8 @@ export default function OfferingChatPanel({
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [reportingId, setReportingId] = useState(null);
   const scrollRef = useRef(null);
 
   const conversationId =
@@ -65,6 +79,26 @@ export default function OfferingChatPanel({
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  const handleReport = async (msg) => {
+    const reason = window.prompt(
+      "Why are you reporting this message? (optional)",
+      "",
+    );
+    if (reason === null) return;
+
+    setReportingId(msg.id);
+    setError("");
+    setInfo("");
+    try {
+      const res = await api.reportChatMessage(msg.id, reason);
+      setInfo(res.message || "Report submitted.");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setReportingId(null);
+    }
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -117,6 +151,7 @@ export default function OfferingChatPanel({
         </p>
 
         {error && <div className="alert alert--error">{error}</div>}
+        {info && <div className="alert alert--success">{info}</div>}
 
         <div className="chat-panel__messages" ref={scrollRef}>
           {loading && messages.length === 0 ? (
@@ -131,6 +166,8 @@ export default function OfferingChatPanel({
                 key={msg.id}
                 message={msg}
                 isMine={msg.sender_role === role}
+                onReport={handleReport}
+                reporting={reportingId === msg.id}
               />
             ))
           )}
