@@ -91,6 +91,22 @@ export const api = {
 
   getMarketplaceOfferings: () => request("/api/marketplace/offerings"),
 
+  getMyClientChats: () => request("/api/chats/clients/me/chats"),
+  getMySupplierChats: () => request("/api/chats/suppliers/me/chats"),
+  getOfferingChat: (offeringId) => request(`/api/chats/offerings/${offeringId}`),
+  sendOfferingChatMessage: (offeringId, message) =>
+    request(`/api/chats/offerings/${offeringId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    }),
+  getChatConversation: (conversationId) =>
+    request(`/api/chats/conversations/${conversationId}`),
+  sendChatMessage: (conversationId, message) =>
+    request(`/api/chats/conversations/${conversationId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    }),
+
   createRequirement: (clientId, data) =>
     request(`/api/clients/${clientId}/requirements`, {
       method: "POST",

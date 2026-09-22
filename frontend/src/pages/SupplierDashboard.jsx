@@ -5,9 +5,10 @@ import FadeIn from "../components/FadeIn";
 import ProfileLinkBanner from "../components/ProfileLinkBanner";
 import OfferingPhotoGallery from "../components/OfferingPhotoGallery";
 import SupplierMatchCard from "../components/SupplierMatchCard";
+import OfferingChatPanel from "../components/OfferingChatPanel";
 import SupplierOrderCard from "../components/SupplierOrderCard";
 import { useAuth } from "../context/AuthContext";
-import { formatMoney, pick } from "../utils/format";
+import { formatDate, formatMoney, pick } from "../utils/format";
 
 const emptyOffering = {
   productOffered: "",
@@ -36,6 +37,8 @@ export default function SupplierDashboard() {
   const [form, setForm] = useState(emptyOffering);
   const [submitting, setSubmitting] = useState(false);
   const [photoFiles, setPhotoFiles] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
 
   const loadData = useCallback(async () => {
     if (!profileId) {
@@ -45,16 +48,19 @@ export default function SupplierDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [supplierRes, offeringsRes, matchesRes, ordersRes] = await Promise.all([
+      const [supplierRes, offeringsRes, matchesRes, ordersRes, chatsRes] =
+        await Promise.all([
         api.getSupplier(profileId),
         api.getOfferings(profileId),
         api.getSupplierMatches(profileId),
         api.getMySupplierOrders().catch(() => ({ data: [] })),
+        api.getMySupplierChats().catch(() => ({ data: [] })),
       ]);
       setSupplier(supplierRes.data);
       setOfferings(offeringsRes.data || []);
       setMatches(matchesRes.matches || []);
       setOrders(ordersRes.data || []);
+      setChats(chatsRes.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -316,6 +322,64 @@ export default function SupplierDashboard() {
               </button>
             </form>
           )}
+
+          <div>
+            <p className="section-title">Client negotiations</p>
+            {chats.length === 0 ? (
+              <div className="card empty">
+                <h3>No chats yet</h3>
+                <p>When a client messages you about an offering, the thread appears here.</p>
+              </div>
+            ) : (
+              <div className="chat-inbox">
+                {chats.map((chat) => {
+                  const cid = pick(chat, "id", "id");
+                  return (
+                    <button
+                      key={cid}
+                      type="button"
+                      className="chat-inbox__item card"
+                      onClick={() =>
+                        setActiveChat({
+                          conversationId: cid,
+                          product: pick(chat, "productOffered", "product_offered"),
+                          client: pick(chat, "companyName", "company_name"),
+                        })
+                      }
+                    >
+                      <div className="card-top">
+                        <h3 className="card__title">
+                          {pick(chat, "productOffered", "product_offered")}
+                        </h3>
+                        <span className="card__meta">
+                          {pick(chat, "companyName", "company_name")}
+                        </span>
+                      </div>
+                      <p className="card__meta chat-inbox__preview">
+                        {chat.last_message || "No messages yet"}
+                      </p>
+                      {chat.last_message_at && (
+                        <p className="card__meta">
+                          Updated {formatDate(chat.last_message_at)}
+                        </p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {activeChat && (
+              <OfferingChatPanel
+                conversationId={activeChat.conversationId}
+                productTitle={activeChat.product}
+                counterpartyName={activeChat.client}
+                onClose={() => {
+                  setActiveChat(null);
+                  loadData();
+                }}
+              />
+            )}
+          </div>
 
           <div>
             <p className="section-title">Order requests</p>

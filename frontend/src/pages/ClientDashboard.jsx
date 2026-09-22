@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import ClientOrderCard from "../components/ClientOrderCard";
 import FadeIn from "../components/FadeIn";
 import MarketplaceOfferingCard from "../components/MarketplaceOfferingCard";
+import OfferingChatPanel from "../components/OfferingChatPanel";
 import ProfileLinkBanner from "../components/ProfileLinkBanner";
 import { useAuth } from "../context/AuthContext";
 import { formatDate, formatMoney, pick, titleCase } from "../utils/format";
@@ -12,6 +13,7 @@ const CLIENT_TABS = [
   { id: "requirements", label: "Your requirements" },
   { id: "orders", label: "Orders" },
   { id: "marketplace", label: "Marketplace" },
+  { id: "messages", label: "Messages" },
   { id: "matching", label: "AI matching" },
 ];
 
@@ -50,6 +52,8 @@ export default function ClientDashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [runningReqId, setRunningReqId] = useState(null);
   const [matchingOfferingId, setMatchingOfferingId] = useState(null);
+  const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
 
   const loadCore = useCallback(async () => {
     if (!profileId) {
@@ -91,11 +95,27 @@ export default function ClientDashboard() {
     loadCore();
   }, [loadCore]);
 
+  const loadChats = useCallback(async () => {
+    if (!profileId) return;
+    try {
+      const res = await api.getMyClientChats();
+      setChats(res.data || []);
+    } catch {
+      setChats([]);
+    }
+  }, [profileId]);
+
   useEffect(() => {
     if (tab === "marketplace" && profileId && marketplace.length === 0) {
       loadMarketplace();
     }
   }, [tab, profileId, marketplace.length, loadMarketplace]);
+
+  useEffect(() => {
+    if (tab === "messages" && profileId) {
+      loadChats();
+    }
+  }, [tab, profileId, loadChats]);
 
   const categories = useMemo(() => {
     const set = new Set(
@@ -259,6 +279,9 @@ export default function ClientDashboard() {
               <span className="client-hub-tabs__badge client-hub-tabs__badge--muted">
                 {marketplace.length}
               </span>
+            )}
+            {item.id === "messages" && chats.length > 0 && (
+              <span className="client-hub-tabs__badge">{chats.length}</span>
             )}
           </button>
         ))}
@@ -575,6 +598,75 @@ export default function ClientDashboard() {
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          )}
+
+          {tab === "messages" && (
+            <div className="stack">
+              <p className="client-hub__lead">
+                Negotiate with suppliers on specific offerings. Each message triggers an email to both parties.
+              </p>
+              {chats.length === 0 ? (
+                <div className="card empty">
+                  <h3>No conversations yet</h3>
+                  <p>Open a listing in Marketplace and use &quot;Chat &amp; negotiate&quot;.</p>
+                  <button
+                    type="button"
+                    className="btn btn--accent"
+                    onClick={() => setTab("marketplace")}
+                  >
+                    Go to marketplace
+                  </button>
+                </div>
+              ) : (
+                <div className="chat-inbox">
+                  {chats.map((chat) => {
+                    const cid = pick(chat, "id", "id");
+                    return (
+                      <button
+                        key={cid}
+                        type="button"
+                        className="chat-inbox__item card"
+                        onClick={() =>
+                          setActiveChat({
+                            conversationId: cid,
+                            product: pick(chat, "productOffered", "product_offered"),
+                            supplier: pick(chat, "supplierName", "supplier_name"),
+                          })
+                        }
+                      >
+                        <div className="card-top">
+                          <h3 className="card__title">
+                            {pick(chat, "productOffered", "product_offered")}
+                          </h3>
+                          <span className="card__meta">
+                            {pick(chat, "supplierName", "supplier_name")}
+                          </span>
+                        </div>
+                        <p className="card__meta chat-inbox__preview">
+                          {chat.last_message || "No messages yet"}
+                        </p>
+                        {chat.last_message_at && (
+                          <p className="card__meta">
+                            Updated {formatDate(chat.last_message_at)}
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {activeChat && (
+                <OfferingChatPanel
+                  conversationId={activeChat.conversationId}
+                  productTitle={activeChat.product}
+                  counterpartyName={activeChat.supplier}
+                  onClose={() => {
+                    setActiveChat(null);
+                    loadChats();
+                  }}
+                />
               )}
             </div>
           )}

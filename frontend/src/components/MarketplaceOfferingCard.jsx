@@ -1,4 +1,5 @@
 import { useState } from "react";
+import OfferingChatPanel from "./OfferingChatPanel";
 import OfferingPhotoGallery from "./OfferingPhotoGallery";
 import SupplierLocationMap from "./SupplierLocationMap";
 import { formatMoney, pick, titleCase } from "../utils/format";
@@ -15,6 +16,7 @@ export default function MarketplaceOfferingCard({
   const [showMatchPanel, setShowMatchPanel] = useState(false);
   const [showSupplier, setShowSupplier] = useState(false);
   const [mapView, setMapView] = useState("business");
+  const [showChat, setShowChat] = useState(false);
 
   const id = pick(offering, "id", "id");
   const product = pick(offering, "productOffered", "product_offered");
@@ -168,6 +170,13 @@ export default function MarketplaceOfferingCard({
         <div className="marketplace-card__actions btn-row">
           <button
             type="button"
+            className="btn btn--secondary"
+            onClick={() => setShowChat(true)}
+          >
+            Chat & negotiate
+          </button>
+          <button
+            type="button"
             className="btn btn--accent"
             onClick={() => setShowMatchPanel((v) => !v)}
             disabled={!requirements.length}
@@ -175,6 +184,15 @@ export default function MarketplaceOfferingCard({
             {isRunning ? "Matching…" : "AI match & order"}
           </button>
         </div>
+
+        {showChat && (
+          <OfferingChatPanel
+            offeringId={id}
+            productTitle={product}
+            counterpartyName={supplier}
+            onClose={() => setShowChat(false)}
+          />
+        )}
 
         {!requirements.length && (
           <p className="field-hint">
