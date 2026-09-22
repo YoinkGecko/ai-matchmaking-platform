@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import FadeIn from "../components/FadeIn";
 import MatchCard from "../components/MatchCard";
 import MatchDetailDrawer from "../components/MatchDetailDrawer";
+import TopSuppliersCompare from "../components/TopSuppliersCompare";
 
 export default function RequirementDetailPage() {
   const { requirementId } = useParams();
@@ -103,7 +104,9 @@ export default function RequirementDetailPage() {
           <p>Run AI matching to generate ranked supplier recommendations.</p>
         </div>
       ) : (
-        <div className="match-grid">
+        <>
+          <TopSuppliersCompare matches={matches} onSelectMatch={setSelectedMatch} />
+          <div className="match-grid">
           {matches.map((match, index) => (
             <MatchCard
               key={match.id || `${match.offering_id}-${match.supplier_id}`}
@@ -112,7 +115,8 @@ export default function RequirementDetailPage() {
               onOpen={setSelectedMatch}
             />
           ))}
-        </div>
+          </div>
+        </>
       )}
 
       {selectedMatch && (
