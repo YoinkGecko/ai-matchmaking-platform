@@ -57,7 +57,6 @@ Built for the **Wisdom Group AI Intern** evaluation — functional product, not 
 ## Architecture
 
 For a more detailed architecture diagram, view the [Architecture Diagram](./architecture.png).
-![Architecture Diagram](./architecture.png)
 
 High-level view of how requests, data, AI, and async email flow together.
 
