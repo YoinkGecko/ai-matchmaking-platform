@@ -1,5 +1,6 @@
 const { Worker } = require("bullmq");
 const nodemailer = require("nodemailer");
+const { buildWisdomMatchHtmlEmail } = require("./wisdom-email-html");
 require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
@@ -22,11 +23,14 @@ const worker = new Worker(
 
       console.log(job.data);
 
+      const html = buildWisdomMatchHtmlEmail({ subject, body });
+
       const info = await transporter.sendMail({
         from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
         to: email,
         subject,
         text: body,
+        html,
       });
 
       console.log("MAIL SENT");
