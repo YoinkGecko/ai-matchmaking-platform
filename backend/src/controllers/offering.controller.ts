@@ -5,6 +5,7 @@ import {
   getOfferingsBySupplierId,
   supplierExists,
 } from "../services/offering.service";
+import { offeringPhotoPublicPaths } from "../middleware/upload.middleware";
 
 export const createOfferingController = async (req: Request, res: Response) => {
   try {
@@ -37,6 +38,10 @@ export const createOfferingController = async (req: Request, res: Response) => {
       additionalNotes,
     } = req.body;
 
+    const photoUrls = offeringPhotoPublicPaths(
+      req.files as Express.Multer.File[] | undefined,
+    );
+
     const offering = await createOffering({
       supplierId,
       productOffered,
@@ -53,6 +58,7 @@ export const createOfferingController = async (req: Request, res: Response) => {
       minimumDeliveryDays,
       maximumDeliveryDays,
       additionalNotes,
+      photoUrls,
     });
 
     res.status(201).json({

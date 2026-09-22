@@ -1735,6 +1735,61 @@ h1 {
   word-break: break-word;
 }
 
+.offering-photos--card {
+  position: relative;
+  margin: -1rem -1rem 0.75rem;
+  border-radius: var(--radius) var(--radius) 0 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--gray-100);
+}
+
+.offering-photos--card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.offering-photos__count {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.75);
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.offering-photos--drawer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.offering-photos__item {
+  display: block;
+  width: calc(50% - 0.25rem);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.offering-photos__item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.match-card .offering-photos--card {
+  margin: 0 0 0.75rem;
+  border-radius: 8px;
+}
+
 .match-detail__block--order {
   border-color: #ffd4c4;
   background: var(--accent-soft);

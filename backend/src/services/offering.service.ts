@@ -18,6 +18,7 @@ export interface CreateOfferingInput {
   minimumDeliveryDays: number;
   maximumDeliveryDays: number;
   additionalNotes?: string;
+  photoUrls?: string[];
 }
 
 export const supplierExists = async (supplierId: string) => {
@@ -60,12 +61,13 @@ export const createOffering = async (data: CreateOfferingInput) => {
       minimum_delivery_days,
       maximum_delivery_days,
       additional_notes,
+      photo_urls,
       embedding
     )
     VALUES (
       $1, $2, $3, $4, $5,
       $6, $7, $8, $9, $10,
-      $11, $12, $13, $14, $15, $16::vector
+      $11, $12, $13, $14, $15, $16::jsonb, $17::vector
     )
     RETURNING *;
   `;
@@ -86,6 +88,7 @@ export const createOffering = async (data: CreateOfferingInput) => {
     data.minimumDeliveryDays,
     data.maximumDeliveryDays,
     data.additionalNotes ?? null,
+    JSON.stringify(data.photoUrls ?? []),
     JSON.stringify(embedding),
   ];
 
@@ -113,6 +116,7 @@ export const getOfferingsBySupplierId = async (supplierId: string) => {
       minimum_delivery_days,
       maximum_delivery_days,
       additional_notes,
+      photo_urls,
       created_at,
       updated_at
     FROM offerings

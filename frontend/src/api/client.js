@@ -3,8 +3,9 @@ import { getToken } from "../utils/storage";
 const BASE = import.meta.env.VITE_API_URL || "";
 
 async function request(path, options = {}) {
+  const isFormData = options.body instanceof FormData;
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...options.headers,
   };
 
@@ -97,11 +98,28 @@ export const api = {
   getOfferings: (supplierId) =>
     request(`/api/suppliers/${supplierId}/offerings`),
 
-  createOffering: (supplierId, data) =>
-    request(`/api/suppliers/${supplierId}/offerings`, {
+  createOffering: (supplierId, data, photoFiles = []) => {
+    const hasPhotos = photoFiles && photoFiles.length > 0;
+    if (!hasPhotos) {
+      return request(`/api/suppliers/${supplierId}/offerings`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    }
+
+    const form = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        form.append(key, String(value));
+      }
+    });
+    photoFiles.forEach((file) => form.append("photos", file));
+
+    return request(`/api/suppliers/${supplierId}/offerings`, {
       method: "POST",
-      body: JSON.stringify(data),
-    }),
+      body: form,
+    });
+  },
 
   getMatches: (requirementId) =>
     request(`/api/requirements/${requirementId}/matches`),

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import MatchStatusBadge from "./MatchStatusBadge";
+import OfferingPhotoGallery from "./OfferingPhotoGallery";
 import OrderStatusBadge from "./OrderStatusBadge";
 import ScoreRing from "./ScoreRing";
 import { formatDate, formatMoney, titleCase } from "../utils/format";
@@ -241,6 +242,7 @@ export default function MatchDetailDrawer({
 
           <section className="match-detail__block">
             <h4>Supplier offering</h4>
+            <OfferingPhotoGallery record={match} variant="drawer" />
             <dl className="match-detail__dl">
               <DetailRow
                 label="Category"

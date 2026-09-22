@@ -126,6 +126,7 @@ export const getMatchesForRequirement = async (requirementId: string) => {
       o.minimum_delivery_days,
       o.maximum_delivery_days,
       o.additional_notes AS offering_additional_notes,
+      o.photo_urls AS offering_photo_urls,
 
       s.supplier_name,
       s.contact_person,
@@ -194,6 +195,7 @@ export const getMatchDetail = async (requirementId: string, matchId: string) => 
       o.minimum_delivery_days,
       o.maximum_delivery_days,
       o.additional_notes AS offering_additional_notes,
+      o.photo_urls AS offering_photo_urls,
 
       s.supplier_name,
       s.contact_person,

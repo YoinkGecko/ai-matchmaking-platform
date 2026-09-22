@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import FadeIn from "../components/FadeIn";
 import ProfileLinkBanner from "../components/ProfileLinkBanner";
+import OfferingPhotoGallery from "../components/OfferingPhotoGallery";
 import SupplierMatchCard from "../components/SupplierMatchCard";
 import SupplierOrderCard from "../components/SupplierOrderCard";
 import { useAuth } from "../context/AuthContext";
@@ -34,6 +35,7 @@ export default function SupplierDashboard() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyOffering);
   const [submitting, setSubmitting] = useState(false);
+  const [photoFiles, setPhotoFiles] = useState([]);
 
   const loadData = useCallback(async () => {
     if (!profileId) {
@@ -69,16 +71,21 @@ export default function SupplierDashboard() {
     setSubmitting(true);
     setError("");
     try {
-      await api.createOffering(profileId, {
-        ...form,
-        availableQuantity: Number(form.availableQuantity),
-        price: Number(form.price),
-        minimumDeliveryDays: Number(form.minimumDeliveryDays),
-        maximumDeliveryDays: Number(form.maximumDeliveryDays),
-        pricingNotes: form.pricingNotes || undefined,
-        additionalNotes: form.additionalNotes || undefined,
-      });
+      await api.createOffering(
+        profileId,
+        {
+          ...form,
+          availableQuantity: Number(form.availableQuantity),
+          price: Number(form.price),
+          minimumDeliveryDays: Number(form.minimumDeliveryDays),
+          maximumDeliveryDays: Number(form.maximumDeliveryDays),
+          pricingNotes: form.pricingNotes || undefined,
+          additionalNotes: form.additionalNotes || undefined,
+        },
+        photoFiles,
+      );
       setForm(emptyOffering);
+      setPhotoFiles([]);
       setShowForm(false);
       await loadData();
     } catch (err) {
@@ -291,6 +298,19 @@ export default function SupplierDashboard() {
                   }
                 />
               </div>
+              <div className="field">
+                <label htmlFor="offeringPhotos">Product photos (optional)</label>
+                <input
+                  id="offeringPhotos"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple
+                  onChange={(e) => setPhotoFiles(Array.from(e.target.files || []))}
+                />
+                <span className="field-hint">
+                  Up to 6 images (jpg, png, webp). Clients see these on match results.
+                </span>
+              </div>
               <button type="submit" className="btn btn--accent" disabled={submitting}>
                 {submitting ? "Saving…" : "Publish offering"}
               </button>
@@ -370,6 +390,7 @@ export default function SupplierDashboard() {
                       className="card card--interactive fade-in"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
+                      <OfferingPhotoGallery record={item} variant="card" />
                       <h3 className="card__title">{product}</h3>
                       <p className="card__meta">
                         {pick(item, "category", "category")} · {qty} {unit} ·{" "}

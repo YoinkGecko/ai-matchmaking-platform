@@ -1,0 +1,2 @@
+ALTER TABLE offerings
+ADD COLUMN IF NOT EXISTS photo_urls JSONB NOT NULL DEFAULT '[]'::jsonb;

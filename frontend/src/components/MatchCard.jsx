@@ -1,4 +1,5 @@
 import MatchStatusBadge from "./MatchStatusBadge";
+import OfferingPhotoGallery from "./OfferingPhotoGallery";
 import ScoreRing from "./ScoreRing";
 import { formatMoney, pick, titleCase } from "../utils/format";
 
@@ -22,6 +23,7 @@ export default function MatchCard({ match, style, onOpen }) {
       style={style}
     >
       <button type="button" className="match-card__hit" onClick={handleOpen}>
+        <OfferingPhotoGallery record={match} variant="card" />
         <div className="card-top">
           <div>
             <h3 className="card__title">{product}</h3>
